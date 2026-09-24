@@ -1,308 +1,304 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl" x-data="{ lang: 'ar', toggleLang() { this.lang = this.lang === 'ar' ? 'en' : 'ar'; document.documentElement.setAttribute('dir', this.lang === 'ar' ? 'rtl' : 'ltr'); document.documentElement.setAttribute('lang', this.lang); } }">
+<html lang="ar" dir="rtl" x-data="{ lang: 'ar', zenMode: false, toggleLang() { this.lang = this.lang === 'ar' ? 'en' : 'ar'; document.documentElement.setAttribute('dir', this.lang === 'ar' ? 'rtl' : 'ltr'); document.documentElement.setAttribute('lang', this.lang); } }">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title x-text="lang === 'ar' ? 'منصة الاختبارات والمذاكرة الذكية | كلية الملك عبدالله للدفاع الجوي' : 'Smart Quiz & Study Hub | King Abdullah Air Defense Academy'">منصة الاختبارات والمذاكرة الذكية</title>
-    <!-- Tailwind CSS CDN -->
-    <link href="/KAADA-logo.png" rel="icon">
+    <link href="./KAADA-logo.png" rel="icon">
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <!-- External CSS -->
-    <link rel="stylesheet" href="style.css">
-    <!-- Google Fonts Cairo & Inter -->
+    <link rel="stylesheet" href="./style.css">
+    <link rel="manifest" href="./manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script>
-    // حماية صفحة الهوم: إذا لم يكن مسجلاً، ارجع فوراً لصفحة الدخول
-    if (localStorage.getItem('kaada_auth') !== 'true') {
-        window.location.href = 'index.html';
-    }
-</script>
+        if (localStorage.getItem('kaada_auth') !== 'true') {
+            window.location.replace('index.html');
+        }
+    </script>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-white relative overflow-x-hidden"
+<body class="bg-[#0c1410] text-slate-100 min-h-screen flex flex-col justify-between selection:bg-emerald-600 selection:text-white relative overflow-x-hidden"
+      :class="zenMode ? 'bg-black text-slate-200' : ''"
       x-data="quizApp()">
 
-    <!-- شاشة حماية كلمة المرور المشفرة -->
-    <div x-data="passwordProtection()" x-show="!isAuthenticated" class="fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-4">
-        <div class="glass-card max-md:w-full max-w-md p-8 rounded-3xl border border-slate-800 shadow-2xl space-y-6 text-center">
-            <div class="bg-gradient-to-tr from-cyan-500 to-blue-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto text-white shadow-lg shadow-cyan-500/30">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-            </div>
-            <div>
-                <h2 class="text-xl font-black text-white" x-text="lang === 'ar' ? 'منصة محمية بكلمة مرور' : 'Password Protected Platform'">منصة محمية بكلمة مرور</h2>
-                <p class="text-xs text-slate-400 mt-1" x-text="lang === 'ar' ? 'الرجاء إدخال كلمة المرور الخاصة بكلية الملك عبدالله للدفاع الجوي للمتابعة' : 'Please enter the access password to continue'">الرجاء إدخال كلمة المرور للمتابعة</p>
-            </div>
+    <!-- خلفيات مضيئة هادئة -->
+    <div class="absolute top-0 -left-4 w-72 md:w-96 h-72 md:h-96 bg-emerald-800/10 rounded-full blur-3xl pointer-events-none" x-show="!zenMode"></div>
+    <div class="absolute bottom-10 -right-4 w-72 md:w-96 h-72 md:h-96 bg-emerald-900/10 rounded-full blur-3xl pointer-events-none" x-show="!zenMode"></div>
 
-            <form @submit.prevent="checkPassword" class="space-y-4">
-                <input type="password" x-model="inputPassword" placeholder="أدخل كلمة المرور..." 
-                    class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-center text-white focus:outline-none focus:border-cyan-500 shadow-inner">
-                
-                <p x-show="showError" class="text-xs text-rose-400 font-semibold" x-text="lang === 'ar' ? 'كلمة المرور غير صحيحة، حاول مرة أخرى.' : 'Incorrect password, please try again.'">كلمة المرور غير صحيحة</p>
-
-                <button type="submit" class="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl shadow-lg shadow-cyan-600/30 text-sm transition-all">
-                    <span x-text="lang === 'ar' ? 'دخول للمنصة' : 'Enter Platform'">دخول للمنصة</span>
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Background glowing decorative blobs -->
-    <div class="absolute top-0 -left-4 w-96 h-96 bg-cyan-600/20 rounded-full blur-3xl pointer-events-none"></div>
-    <div class="absolute bottom-10 -right-4 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none"></div>
-
-    <!-- Top Header Bar -->
-    <header class="glass-card border-b border-slate-800 sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto px-4 py-3.5 flex justify-between items-center">
-            <div class="flex items-center gap-3 cursor-pointer" @click="returnToHome()">
-                <div class="bg-gradient-to-tr from-cyan-500 to-blue-600 p-2.5 rounded-2xl shadow-lg shadow-cyan-500/30 text-white">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+    <!-- الشريط العلوي -->
+    <header class="glass-card border-b border-emerald-900/40 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-3 md:px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-2.5 cursor-pointer" @click="returnToHome()">
+                <div class="bg-gradient-to-tr from-emerald-700 to-emerald-900 p-2 rounded-xl md:rounded-2xl shadow-lg shadow-emerald-950/50 text-white">
+                    <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
                 </div>
                 <div>
-                    <h1 class="text-base md:text-lg font-black bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400 bg-clip-text text-transparent" x-text="lang === 'ar' ? 'منصة الاختبارات والمذاكرة الذكية' : 'Smart Quiz & Study Hub'">منصة الاختبارات والمذاكرة الذكية</h1>
-                    <p class="text-xs text-slate-400" x-text="lang === 'ar' ? 'كلية الملك عبدالله للدفاع الجوي' : 'King Abdullah Air Defense Academy'">كلية الملك عبدالله للدفاع الجوي</p>
+                    <h1 class="text-xs md:text-base font-black text-white" x-text="lang === 'ar' ? 'منصة الاختبارات والمذاكرة الذكية' : 'Smart Quiz & Study Hub'">منصة الاختبارات والمذاكرة الذكية</h1>
+                    <p class="text-[10px] md:text-xs text-slate-400" x-text="lang === 'ar' ? 'كلية الملك عبدالله للدفاع الجوي' : 'King Abdullah Air Defense Academy'">كلية الملك عبدالله للدفاع الجوي</p>
                 </div>
             </div>
 
-            <div class="flex items-center gap-3">
-                <!-- Timer status if active -->
-                <div x-show="currentView === 'quiz' && timerSeconds > 0" class="text-xs bg-cyan-950/80 px-3 py-1.5 rounded-xl border border-cyan-500/40 text-cyan-300 flex items-center gap-2 font-mono font-bold shadow-inner">
-                    <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
-                    <span x-text="timeLeft + 's'">30s</span>
-                </div>
+            <div class="flex items-center gap-2">
+                <button @click="zenMode = !zenMode" class="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-emerald-900/60 text-xs font-semibold text-emerald-300 transition-all shadow flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                    <span class="hidden sm:inline" x-text="zenMode ? (lang === 'ar' ? 'عادي' : 'Normal') : (lang === 'ar' ? 'تركيز' : 'Zen')">تركيز</span>
+                </button>
 
-                <!-- Language Toggle Button -->
-                <button @click="toggleLang()" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-cyan-300 transition-all shadow flex items-center gap-1.5">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path></svg>
-                    <span x-text="lang === 'ar' ? 'English' : 'عربي'">English</span>
+                <button @click="localStorage.removeItem('kaada_auth'); window.location.replace('index.html');" class="px-2.5 py-1.5 rounded-xl bg-red-950/40 hover:bg-red-900/60 border border-red-500/30 text-xs font-semibold text-red-300 transition-all shadow flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    <span x-text="lang === 'ar' ? 'خروج' : 'Lock'">خروج</span>
+                </button>
+
+                <button @click="toggleLang()" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-emerald-900/60 text-xs font-semibold text-emerald-300 transition-all shadow">
+                    <span x-text="lang === 'ar' ? 'EN' : 'AR'">EN</span>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- Main Dynamic Container -->
-    <main class="max-w-4xl w-full mx-auto px-4 py-8 flex-grow flex flex-col justify-center z-10">
+    <!-- المحتوى الرئيسي -->
+    <main class="max-w-4xl w-full mx-auto px-3 md:px-4 py-6 md:py-8 flex-grow flex flex-col justify-center z-10">
 
-        <!-- VIEW 1: QUIZ HUB / MENU -->
+        <!-- 1. القائمة الرئيسية -->
         <div x-show="currentView === 'home'" class="space-y-6" x-transition:enter="transition ease-out duration-300">
-            <div class="text-center space-y-3 mb-8">
-                <span class="bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 text-xs px-3.5 py-1.5 rounded-full font-bold uppercase tracking-wider inline-block">
-                    <span x-text="lang === 'ar' ? 'كلية الملك عبدالله للدفاع الجوي' : 'King Abdullah Air Defense Academy'">كلية الملك عبدالله للدفاع الجوي</span>
+            <div class="text-center space-y-2 md:space-y-3 mb-6 md:mb-8">
+                <span class="bg-emerald-600/10 text-emerald-400 border border-emerald-600/30 text-[11px] md:text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider inline-block">
+                    <span x-text="lang === 'ar' ? 'قوة • عزيمة • ثبات' : 'Power • Determination • Steadfastness'">قوة • عزيمة • ثبات</span>
                 </span>
-                <h2 class="text-2xl md:text-4xl font-black text-white tracking-tight" x-text="lang === 'ar' ? 'اختر المادة للاختبار الشامل أو المذاكرة' : 'Select Subject for Complete Quiz or Study'">اختر المادة للاختبار الشامل أو المذاكرة</h2>
-                <p class="text-slate-400 max-w-xl mx-auto text-sm leading-relaxed" x-text="lang === 'ar' ? 'تغطي الأسئلة جميع الفصول المحددة بناءً على ملفات الباوربوينت والملخصات المحددة. النتيجة والتقييم تظهر في نهاية الاختبار مع الشرح الكامل.' : 'The questions cover all the specified chapters based on the PowerPoint files and the specified summaries. The results and evaluation appear at the end of the test with a full explanation.'">تغطي الأسئلة جميع الفصول المحددة.</p>
+                <h2 class="text-xl md:text-3xl font-black text-white tracking-tight" x-text="lang === 'ar' ? 'اختر المادة للاختبار الشامل أو المذاكرة' : 'Select Subject for Complete Quiz or Study'">اختر المادة للاختبار الشامل أو المذاكرة</h2>
+                <p class="text-slate-400 max-w-lg mx-auto text-xs md:text-sm leading-relaxed" x-text="lang === 'ar' ? 'منصة الاختبارات والمذاكرة الذكية - كلية الملك عبدالله للدفاع الجوي' : 'Smart Quiz & Study Hub - KAADA'">منظومة الاختبارات والمذاكرة الذكية.</p>
             </div>
 
-            <!-- Settings Bar -->
-            <div class="glass-card p-4 rounded-2xl flex flex-wrap gap-4 items-center justify-between shadow-xl">
-                <div class="flex items-center gap-3">
-                    <span class="text-sm font-semibold text-slate-300" x-text="lang === 'ar' ? 'مؤقت السؤال الواحد:' : 'Timer per Question:'">مؤقت السؤال:</span>
-                    <select x-model.number="timerSeconds" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-cyan-300 focus:outline-none focus:border-cyan-500 shadow-inner">
-                        <option value="30" x-text="lang === 'ar' ? '30 ثانية لكل سؤال' : '30 seconds'">30 ثانية</option>
-                        <option value="60" x-text="lang === 'ar' ? '60 ثانية لكل سؤال' : '60 seconds'">60 ثانية</option>
-                        <option value="0" x-text="lang === 'ar' ? 'بدون وقت (مريح ومفتوح)' : 'Unlimited (Relaxed)'">بدون وقت</option>
+            <!-- شريط الخدمات -->
+            <div class="glass-card p-3 md:p-4 rounded-2xl flex flex-col sm:flex-row gap-3 items-center justify-between shadow-xl">
+                <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
+                    <span class="text-xs font-semibold text-slate-300" x-text="lang === 'ar' ? 'مؤقت السؤال:' : 'Timer:'">مؤقت السؤال:</span>
+                    <select x-model.number="timerSeconds" class="bg-slate-900 border border-emerald-900/60 rounded-xl px-2.5 py-1.5 text-xs text-emerald-300 focus:outline-none focus:border-emerald-500">
+                        <option value="30" x-text="lang === 'ar' ? '30 ثانية' : '30s'">30 ثانية</option>
+                        <option value="60" x-text="lang === 'ar' ? '60 ثانية' : '60s'">60 ثانية</option>
+                        <option value="0" x-text="lang === 'ar' ? 'بدون وقت' : 'Unlimited'">بدون وقت</option>
                     </select>
                 </div>
-                <div class="flex items-center gap-3">
-                    <button @click="openStudyGuide()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold shadow-lg shadow-blue-600/30 transition-all flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                        <span x-text="lang === 'ar' ? 'دليل الشرح والمسائل (Study Guide)' : 'Study Guide & Explanations'">دليل الشرح والمسائل</span>
+                <div class="grid grid-cols-2 sm:flex flex-wrap gap-2 w-full sm:w-auto">
+                    <!-- المفضلة -->
+                    <button @click="openBookmarks()" class="px-3 py-2 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-600/30 text-emerald-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow">
+                        <svg class="w-3.5 h-3.5 text-emerald-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        <span x-text="(lang === 'ar' ? 'بنك المفضلة (' : 'Fav (') + bookmarks.length + ')'">بنك المفضلة</span>
+                    </button>
+                    <!-- بطاقات الاستذكار -->
+                    <button @click="openFlashcards()" class="px-3 py-2 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-600/30 text-emerald-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow">
+                        <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2h0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                        <span x-text="lang === 'ar' ? 'بطاقات الاستذكار' : 'Flashcards'">بطاقات الاستذكار</span>
+                    </button>
+                    <!-- مؤشرات الأداء -->
+                    <button @click="openAnalytics()" class="px-3 py-2 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-600/30 text-emerald-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow">
+                        <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                        <span x-text="lang === 'ar' ? 'مؤشرات الأداء' : 'Analytics'">مؤشرات الأداء</span>
+                    </button>
+                    <!-- المحاكي الحر -->
+                    <button @click="openCustomQuizBuilder()" class="px-3 py-2 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-600/30 text-emerald-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow">
+                        <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        <span x-text="lang === 'ar' ? 'المحاكي الحر' : 'Custom Quiz'">المحاكي الحر</span>
+                    </button>
+                    <!-- حاسبة المعدل -->
+                    <button @click="openCalculator()" class="px-3 py-2 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-600/30 text-emerald-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow">
+                        <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                        <span x-text="lang === 'ar' ? 'حاسبة المعدل' : 'GPA Calc'">حاسبة المعدل</span>
+                    </button>
+                    <!-- مؤقت التركيز -->
+                    <button @click="openPomodoro()" class="px-3 py-2 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-600/30 text-emerald-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow">
+                        <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span x-text="lang === 'ar' ? 'مؤقت التركيز' : 'Pomodoro'">مؤقت التركيز</span>
+                    </button>
+                    <!-- دفتر الملاحظات -->
+                    <button @click="openNotes()" class="px-3 py-2 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-600/30 text-emerald-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow">
+                        <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        <span x-text="lang === 'ar' ? 'دفتر الملاحظات' : 'Notes'">دفتر الملاحظات</span>
+                    </button>
+                    <!-- دليل الشرح -->
+                    <button @click="openStudyGuide()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-700 to-emerald-900 text-white text-xs font-bold shadow-lg shadow-emerald-900/40 transition-all col-span-2 sm:col-span-1 flex items-center justify-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                        <span x-text="lang === 'ar' ? 'دليل الشرح' : 'Study Guide'">دليل الشرح</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Subject Cards Grid -->
-            <div class="grid md:grid-cols-2 gap-4">
-                <!-- Aqeedah Quiz (Arabic Only) -->
-                <div x-show="isSubjectVisible('aqeedah')" @click="startQuiz('aqeedah')" class="glass-card hover:border-amber-500/50 p-6 rounded-3xl cursor-pointer transition-all duration-300 shadow-xl group flex flex-col justify-between hover:scale-[1.01]">
+            <!-- شبكة المواد الدراسية (بلون موحد مريح للعين) -->
+            <div class="grid sm:grid-cols-2 gap-3.5 md:gap-4">
+                <div x-show="isSubjectVisible('aqeedah')" @click="startQuiz('aqeedah')" class="glass-card hover:border-emerald-500/50 p-5 md:p-6 rounded-3xl cursor-pointer transition-all duration-300 shadow-xl group flex flex-col justify-between hover:scale-[1.01]">
                     <div>
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs px-3 py-1 rounded-full font-bold">العقيدة الإسلامية</span>
-                            <span class="text-xs text-slate-400 font-mono" x-text="quizzesData.aqeedah.ar.questions.length + ' سؤال'">سؤال</span>
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="bg-emerald-600/10 text-emerald-400 border border-emerald-600/30 text-[11px] px-2.5 py-1 rounded-full font-bold">العقيدة الإسلامية</span>
+                            <span class="text-xs text-emerald-300 font-mono bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-900/40" x-text="quizzesData.aqeedah.ar.questions.length + ' سؤال'">سؤال</span>
                         </div>
-                        <h3 class="text-lg font-bold text-white group-hover:text-amber-300 transition-colors">منهج العقيدة للكليات العسكرية</h3>
-                        <p class="text-slate-400 text-xs mt-2 leading-relaxed">أركان الإيمان، البرزخ، عذاب القبر ونعيمه، وأشراط الساعة الصغرى والكبرى.</p>
+                        <h3 class="text-base md:text-lg font-bold text-white group-hover:text-emerald-300 transition-colors">منهج العقيدة للكليات العسكرية</h3>
+                        <p class="text-slate-400 text-xs mt-2 leading-relaxed">أركان الإيمان، البرزخ، عذاب القبر ونعيمه، وأشراط الساعة.</p>
                     </div>
-                    <div class="mt-6 flex items-center justify-between pt-4 border-t border-slate-800">
-                        <span class="text-xs text-amber-400 font-bold flex items-center gap-1.5">ابدأ اختبار العقيدة &larr;</span>
+                    <div class="mt-5 flex items-center justify-between pt-3 border-t border-emerald-900/40">
+                        <span class="text-xs text-emerald-400 font-bold" x-text="lang === 'ar' ? 'ابدأ الاختبار &larr;' : 'Start Quiz &larr;'">ابدأ الاختبار</span>
                     </div>
                 </div>
 
-                <!-- Fiqh Quiz (Arabic Only) -->
-                <div x-show="isSubjectVisible('fiqh')" class="glass-card hover:border-emerald-500/50 p-6 rounded-3xl cursor-pointer transition-all duration-300 shadow-xl group flex flex-col justify-between hover:scale-[1.01]">
+                <div @click="startQuiz('chem')" class="glass-card hover:border-emerald-500/50 p-5 md:p-6 rounded-3xl cursor-pointer transition-all duration-300 shadow-xl group flex flex-col justify-between hover:scale-[1.01]">
                     <div>
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs px-3 py-1 rounded-full font-bold">الفقه والسلوك</span>
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="bg-emerald-600/10 text-emerald-400 border border-emerald-600/30 text-[11px] px-2.5 py-1 rounded-full font-bold" x-text="lang === 'ar' ? 'مادة الكيمياء' : 'Chemistry'">الكيمياء</span>
+                            <span class="text-xs text-emerald-300 font-mono bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-900/40" x-text="quizzesData.chem[lang].questions.length + (lang === 'ar' ? ' سؤال' : ' Qs')">سؤال</span>
                         </div>
-                        <h3 class="text-lg font-bold text-white group-hover:text-emerald-300 transition-colors">منهج الفقه والسلوك العسكري</h3>
-                        <p class="text-slate-400 text-xs mt-2 leading-relaxed">لم يتم تحديد منهج الفقة من قبل الدكتور حسب ما ذكر الدكتور بانه سـ يقوم ب تحديد المنهج قبل الاختبار</p>
+                        <h3 class="text-base md:text-lg font-bold text-white group-hover:text-emerald-300 transition-colors" x-text="lang === 'ar' ? 'اختبار الكيمياء الشامل (الفصول 1-3)' : 'Complete Chemistry Review (Ch 1-3)'">اختبار الكيمياء الشامل</h3>
+                        <p class="text-slate-400 text-xs mt-2 leading-relaxed" x-text="lang === 'ar' ? 'الأرقام المعنوية، الوحدات الدولية، التركيب الذري، والمول.' : 'Significant figures, atomic structure, and moles.'">تغطية كاملة للفصول.</p>
+                    </div>
+                    <div class="mt-5 flex items-center justify-between pt-3 border-t border-emerald-900/40">
+                        <span class="text-xs text-emerald-400 font-bold" x-text="lang === 'ar' ? 'ابدأ الاختبار &larr;' : 'Start Quiz &larr;'">ابدأ الاختبار</span>
                     </div>
                 </div>
 
-                <!-- Chemistry Quiz -->
-                <div @click="startQuiz('chem')" class="glass-card hover:border-cyan-500/50 p-6 rounded-3xl cursor-pointer transition-all duration-300 shadow-xl group flex flex-col justify-between hover:scale-[1.01]">
+                <div @click="startQuiz('math')" class="glass-card hover:border-emerald-500/50 p-5 md:p-6 rounded-3xl cursor-pointer transition-all duration-300 shadow-xl group flex flex-col justify-between hover:scale-[1.01]">
                     <div>
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 text-xs px-3 py-1 rounded-full font-bold" x-text="lang === 'ar' ? 'مادة الكيمياء' : 'Chemistry'">الكيمياء</span>
-                            <span class="text-xs text-slate-400 font-mono" x-text="quizzesData.chem[lang].questions.length + (lang === 'ar' ? ' سؤال' : ' Questions')">سؤال</span>
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="bg-emerald-600/10 text-emerald-400 border border-emerald-600/30 text-[11px] px-2.5 py-1 rounded-full font-bold" x-text="lang === 'ar' ? 'الرياضيات' : 'Mathematics'">الرياضيات</span>
+                            <span class="text-xs text-emerald-300 font-mono bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-900/40" x-text="quizzesData.math[lang].questions.length + (lang === 'ar' ? ' سؤال' : ' Qs')">سؤال</span>
                         </div>
-                        <h3 class="text-lg font-bold text-white group-hover:text-cyan-300 transition-colors" x-text="lang === 'ar' ? 'اختبار الكيمياء الشامل (الفصول 1-3)' : 'Complete Chemistry Review (Ch 1-3)'">اختبار الكيمياء الشامل</h3>
-                        <p class="text-slate-400 text-xs mt-2 leading-relaxed" x-text="lang === 'ar' ? 'الأرقام المعنوية، الوحدات الدولية، التركيب الذري، المول، التراكيز، وقوانين الغازات.' : 'Significant figures, SI units, atomic structure, moles, and gas laws.'">تغطية كاملة للفصول.</p>
+                        <h3 class="text-base md:text-lg font-bold text-white group-hover:text-emerald-300 transition-colors" x-text="lang === 'ar' ? 'الرياضيات والمنطق والمجموعات' : 'Mathematics (Logic & Sets)'">الرياضيات والمنطق</h3>
+                        <p class="text-slate-400 text-xs mt-2 leading-relaxed" x-text="lang === 'ar' ? 'المنطق الرياضي، جداول الصواب، أنظمة الأعداد.' : 'Mathematical logic and truth tables.'">المنطق الرياضي وأنظمة الأعداد.</p>
                     </div>
-                    <div class="mt-6 flex items-center justify-between pt-4 border-t border-slate-800">
-                        <span class="text-xs text-cyan-400 font-bold flex items-center gap-1.5" x-text="lang === 'ar' ? 'ابدأ اختبار الكيمياء &larr;' : 'Start Chemistry Quiz &larr;'">ابدأ اختبار الكيمياء</span>
+                    <div class="mt-5 flex items-center justify-between pt-3 border-t border-emerald-900/40">
+                        <span class="text-xs text-emerald-400 font-bold" x-text="lang === 'ar' ? 'ابدأ الاختبار &larr;' : 'Start Quiz &larr;'">ابدأ الاختبار</span>
                     </div>
                 </div>
 
-                <!-- Math Quiz -->
-                <div @click="startQuiz('math')" class="glass-card hover:border-indigo-500/50 p-6 rounded-3xl cursor-pointer transition-all duration-300 shadow-xl group flex flex-col justify-between hover:scale-[1.01]">
+                <div @click="startQuiz('comp')" class="glass-card hover:border-emerald-500/50 p-5 md:p-6 rounded-3xl cursor-pointer transition-all duration-300 shadow-xl group flex flex-col justify-between hover:scale-[1.01]">
                     <div>
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-xs px-3 py-1 rounded-full font-bold" x-text="lang === 'ar' ? 'الرياضيات' : 'Mathematics'">الرياضيات</span>
-                            <span class="text-xs text-slate-400 font-mono" x-text="quizzesData.math[lang].questions.length + (lang === 'ar' ? ' سؤال' : ' Questions')">سؤال</span>
+                        <div class="flex justify-between items-start mb-3">
+                            <span class="bg-emerald-600/10 text-emerald-400 border border-emerald-600/30 text-[11px] px-2.5 py-1 rounded-full font-bold" x-text="lang === 'ar' ? 'الحاسب الآلي' : 'Computer Science'">الحاسب الآلي</span>
+                            <span class="text-xs text-emerald-300 font-mono bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-900/40" x-text="quizzesData.comp[lang].questions.length + (lang === 'ar' ? ' سؤال' : ' Qs')">سؤال</span>
                         </div>
-                        <h3 class="text-lg font-bold text-white group-hover:text-indigo-300 transition-colors" x-text="lang === 'ar' ? 'الرياضيات والمنطق والمجموعات' : 'Mathematics (Logic & Sets)'">الرياضيات والمنطق</h3>
-                        <p class="text-slate-400 text-xs mt-2 leading-relaxed" x-text="lang === 'ar' ? 'المنطق الرياضي، جداول الصواب، أنظمة الأعداد، ونظرية المجموعات.' : 'Mathematical logic, truth tables, number systems, and sets.'">المنطق الرياضي وأنظمة الأعداد.</p>
+                        <h3 class="text-base md:text-lg font-bold text-white group-hover:text-emerald-300 transition-colors" x-text="lang === 'ar' ? 'الحاسب الآلي (نظري وعملي)' : 'Computer Science (Theory & Practical)'">الحاسب الآلي (نظري وعملي)</h3>
+                        <p class="text-slate-400 text-xs mt-2 leading-relaxed" x-text="lang === 'ar' ? 'مكونات الحاسب، الذاكرة، ومهارات الوورد وويندوز.' : 'Computer components, RAM/ROM, Windows & Word.'">مكونات الحاسب والمهارات العملية.</p>
                     </div>
-                    <div class="mt-6 flex items-center justify-between pt-4 border-t border-slate-800">
-                        <span class="text-xs text-indigo-400 font-bold flex items-center gap-1.5" x-text="lang === 'ar' ? 'ابدأ اختبار الرياضيات &larr;' : 'Start Math Quiz &larr;'">ابدأ اختبار الرياضيات</span>
-                    </div>
-                </div>
-
-                <!-- Computer Quiz -->
-                <div @click="startQuiz('comp')" class="glass-card hover:border-blue-500/50 p-6 rounded-3xl cursor-pointer transition-all duration-300 shadow-xl group flex flex-col justify-between md:col-span-2 hover:scale-[1.01]">
-                    <div>
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs px-3 py-1 rounded-full font-bold" x-text="lang === 'ar' ? 'الحاسب الآلي' : 'Computer Science'">الحاسب الآلي</span>
-                            <span class="text-xs text-slate-400 font-mono" x-text="quizzesData.comp[lang].questions.length + (lang === 'ar' ? ' سؤال' : ' Questions')">سؤال</span>
-                        </div>
-                        <h3 class="text-lg font-bold text-white group-hover:text-blue-300 transition-colors" x-text="lang === 'ar' ? 'الحاسب الآلي (نظري وعملي الوورد وويندوز)' : 'Computer Science (Theory & Practical)'">الحاسب الآلي (نظري وعملي)</h3>
-                        <p class="text-slate-400 text-xs mt-2 leading-relaxed" x-text="lang === 'ar' ? 'مكونات الحاسب، الذاكرة (RAM/ROM)، وحدات الإدخال والإخراج، أنظمة التشغيل، وتطوير وتحليل النظم.' : 'Computer components, RAM/ROM, input/output units, operating systems, and analysis.'">مكونات الحاسب، الذاكرة، ومهارات الوورد وويندوز.</p>
-                    </div>
-                    <div class="mt-6 flex items-center justify-between pt-4 border-t border-slate-800">
-                        <span class="text-xs text-blue-400 font-bold flex items-center gap-1.5" x-text="lang === 'ar' ? 'ابدأ اختبار الحاسب الآلي الشامل &larr;' : 'Start Computer Quiz &larr;'">ابدأ اختبار الحاسب الآلي</span>
+                    <div class="mt-5 flex items-center justify-between pt-3 border-t border-emerald-900/40">
+                        <span class="text-xs text-emerald-400 font-bold" x-text="lang === 'ar' ? 'ابدأ الاختبار &larr;' : 'Start Quiz &larr;'">ابدأ الاختبار</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- VIEW 2: ACTIVE QUIZ INTERFACE -->
-        <div x-show="currentView === 'quiz'" class="space-y-6" x-transition:enter="transition ease-out duration-300">
-            <!-- Quiz Progress & Info Header -->
-            <div class="glass-card p-4 rounded-2xl flex justify-between items-center shadow-lg">
+        <!-- 2. واجهة الاختبار النشط -->
+        <div x-show="currentView === 'quiz'" class="space-y-4 md:space-y-6" x-transition:enter="transition ease-out duration-300">
+            <div class="w-full bg-slate-900 border border-emerald-900/40 rounded-full h-2.5 overflow-hidden shadow-inner">
+                <div class="bg-gradient-to-r from-emerald-600 to-emerald-400 h-2.5 transition-all duration-300 rounded-full" :style="'width: ' + ((currentIndex + 1) / currentQuestions.length) * 100 + '%'"></div>
+            </div>
+
+            <div class="glass-card p-3.5 md:p-4 rounded-2xl flex justify-between items-center shadow-lg">
                 <div>
-                    <span class="bg-cyan-500/10 text-cyan-400 text-xs px-3 py-1 rounded-full font-bold border border-cyan-500/20" x-text="currentCategory">Category</span>
-                    <h3 class="text-base font-bold text-white mt-1" x-text="currentTitle">Quiz Title</h3>
+                    <span class="bg-emerald-600/10 text-emerald-400 text-[11px] px-2.5 py-0.5 rounded-full font-bold border border-emerald-600/30" x-text="currentCategory">Category</span>
+                    <h3 class="text-sm md:text-base font-bold text-white mt-1" x-text="currentTitle">Quiz Title</h3>
                 </div>
-                <div class="text-left">
-                    <span class="text-xs text-slate-400 block" x-text="lang === 'ar' ? 'السؤال الحالي' : 'Question'">السؤال</span>
-                    <span class="text-lg font-mono font-bold text-cyan-400" x-text="(currentIndex + 1) + ' / ' + currentQuestions.length">1 / 20</span>
+                <div class="flex items-center gap-2.5">
+                    <button @click="toggleBookmark(currentQuestions[currentIndex])" 
+                            class="px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all flex items-center gap-1 shadow"
+                            :class="isBookmarked(currentQuestions[currentIndex]) ? 'bg-emerald-600/20 text-emerald-300 border-emerald-600/40' : 'bg-slate-900 text-slate-400 border-emerald-900/60 hover:text-emerald-300'">
+                        <svg class="w-3.5 h-3.5" :fill="isBookmarked(currentQuestions[currentIndex]) ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg>
+                        <span class="hidden sm:inline" x-text="isBookmarked(currentQuestions[currentIndex]) ? (lang === 'ar' ? 'محفوظ' : 'Saved') : (lang === 'ar' ? 'حفظ' : 'Save')">حفظ</span>
+                    </button>
+                    <div class="text-left">
+                        <span class="text-[10px] text-slate-400 block" x-text="lang === 'ar' ? 'السؤال' : 'Q'">السؤال</span>
+                        <span class="text-sm md:text-lg font-mono font-bold text-emerald-400" x-text="(currentIndex + 1) + ' / ' + currentQuestions.length">1 / 20</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Question Card -->
-            <div class="glass-card p-6 md:p-8 rounded-3xl shadow-2xl space-y-6 relative overflow-hidden">
-                <div class="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 rounded-full blur-2xl pointer-events-none"></div>
-                
-                <div class="space-y-2">
-                    <div class="flex justify-between items-center text-xs text-slate-400">
-                        <span class="font-mono" x-text="(lang === 'ar' ? 'السؤال رقم ' : 'Question #') + (currentIndex + 1)">السؤال الأول</span>
-                        <span class="text-cyan-400 font-bold" x-text="lang === 'ar' ? 'أجب عن جميع الأسئلة للانتقال للنتيجة النهائية' : 'Answer all questions to view final results'">أجب عن جميع الأسئلة</span>
-                    </div>
-                    <h4 class="text-lg md:text-xl font-bold text-white leading-relaxed" x-text="currentQuestions[currentIndex]?.q">نص السؤال...</h4>
-                </div>
+            <div class="glass-card p-5 md:p-8 rounded-3xl shadow-2xl space-y-5 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-600/5 rounded-full blur-2xl pointer-events-none"></div>
+                <h4 class="text-base md:text-xl font-bold text-white leading-relaxed" x-text="currentQuestions[currentIndex]?.q">نص السؤال...</h4>
 
-                <!-- Options List -->
-                <div class="space-y-3">
+                <div class="space-y-2.5">
                     <template x-for="(opt, idx) in currentQuestions[currentIndex]?.options" :key="idx">
                         <button @click="selectOption(idx)"
                                 :class="{
-                                    'bg-cyan-950/60 border-cyan-500 text-cyan-200 shadow-cyan-500/20': userAnswers[currentIndex] === idx,
-                                    'bg-slate-900/80 hover:bg-slate-800 border-slate-700 hover:border-cyan-500 text-slate-200': userAnswers[currentIndex] !== idx
+                                    'bg-emerald-950/60 border-emerald-500 text-emerald-200 shadow-emerald-500/20': userAnswers[currentIndex] === idx,
+                                    'bg-slate-900/80 hover:bg-slate-800 border-emerald-900/40 hover:border-emerald-500 text-slate-200': userAnswers[currentIndex] !== idx
                                 }"
-                                class="w-full text-right p-4 rounded-2xl border text-sm font-medium transition-all flex items-center justify-between group shadow-md">
+                                class="w-full text-right p-3.5 md:p-4 rounded-2xl border text-xs md:text-sm font-medium transition-all flex items-center justify-between group shadow-md">
                             <span x-text="opt">خيار الإجابة</span>
-                            <span class="w-6 h-6 rounded-full border border-slate-700 flex items-center justify-center text-xs text-slate-400 font-mono group-hover:border-cyan-400 group-hover:text-cyan-400" :class="userAnswers[currentIndex] === idx ? 'border-cyan-400 text-cyan-400 bg-cyan-950' : ''" x-text="String.fromCharCode(65 + idx)">A</span>
+                            <span class="w-5 h-5 md:w-6 md:h-6 rounded-full border border-emerald-900/60 flex items-center justify-center text-[11px] text-slate-400 font-mono group-hover:border-emerald-400 group-hover:text-emerald-400 shrink-0" :class="userAnswers[currentIndex] === idx ? 'border-emerald-400 text-emerald-400 bg-emerald-950' : ''" x-text="String.fromCharCode(65 + idx)">A</span>
                         </button>
                     </template>
                 </div>
             </div>
 
-            <!-- Quiz Footer Controls -->
             <div class="flex justify-between items-center pt-2">
-                <button @click="prevQuestion()" :disabled="currentIndex === 0" :class="currentIndex === 0 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-slate-800'" class="px-5 py-2.5 rounded-xl bg-slate-900 text-slate-300 text-sm font-semibold border border-slate-700 transition-colors shadow flex items-center gap-1.5">
-                    &rarr; <span x-text="lang === 'ar' ? 'السؤال السابق' : 'Previous'">السؤال السابق</span>
+                <button @click="prevQuestion()" :disabled="currentIndex === 0" :class="currentIndex === 0 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-slate-800'" class="px-4 py-2.5 rounded-xl bg-slate-900 text-slate-300 text-xs md:text-sm font-semibold border border-emerald-900/60 transition-colors shadow">
+                    &rarr; <span x-text="lang === 'ar' ? 'السابق' : 'Prev'">السابق</span>
                 </button>
                 <div class="flex gap-2">
-                    <button @click="returnToHome()" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 text-xs font-semibold border border-slate-700 transition-colors">
-                        <span x-text="lang === 'ar' ? 'إنهاء وإلغاء' : 'Quit'">إنهاء وإلغاء</span>
+                    <button @click="returnToHome()" class="px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 text-xs font-semibold border border-emerald-900/60 transition-colors">
+                        <span x-text="lang === 'ar' ? 'إنهاء' : 'Quit'">إنهاء</span>
                     </button>
-                    <button x-show="currentIndex < currentQuestions.length - 1" @click="nextQuestion()" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-sm font-bold shadow-lg shadow-cyan-600/30 transition-all flex items-center gap-2">
-                        <span x-text="lang === 'ar' ? 'السؤال التالي' : 'Next Question'">السؤال التالي</span> &larr;
+                    <button x-show="currentIndex < currentQuestions.length - 1" @click="nextQuestion()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-700 to-emerald-900 text-white text-xs md:text-sm font-bold shadow-lg shadow-emerald-900/40 transition-all">
+                        <span x-text="lang === 'ar' ? 'التالي' : 'Next'">التالي</span> &larr;
                     </button>
-                    <button x-show="currentIndex === currentQuestions.length - 1" @click="finishQuiz()" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-sm font-bold shadow-lg shadow-emerald-600/30 transition-all flex items-center gap-2">
-                        <span x-text="lang === 'ar' ? 'عرض النتيجة النهائية والحلول' : 'View Final Results & Solutions'">عرض النتيجة النهائية</span> &larr;
+                    <button x-show="currentIndex === currentQuestions.length - 1" @click="finishQuiz()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-800 text-white text-xs md:text-sm font-bold shadow-lg shadow-emerald-900/40 transition-all">
+                        <span x-text="lang === 'ar' ? 'عرض النتيجة' : 'Results'">عرض النتيجة</span> &larr;
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- VIEW 3: RESULTS & MISTAKE REVIEW DASHBOARD -->
+        <!-- 3. واجهة النتائج -->
         <div x-show="currentView === 'results'" class="space-y-6" x-transition:enter="transition ease-out duration-300">
-            <div class="glass-card p-8 rounded-3xl text-center shadow-2xl space-y-6 relative overflow-hidden">
-                <div class="w-28 h-28 bg-cyan-500/10 border border-cyan-500/40 rounded-full flex items-center justify-center mx-auto text-cyan-400 text-4xl font-black shadow-xl shadow-cyan-500/20 glow-effect" x-text="getResultPercentage() + '%'">
-                    85%
-                </div>
-                <div class="space-y-2">
-                    <h3 class="text-2xl md:text-3xl font-black text-white" x-text="getResultTitle()">أحسنت! أداء ممتاز</h3>
-                    <p class="text-slate-400 text-sm" x-text="(lang === 'ar' ? 'لقد أجبت على ' : 'You answered ') + score + (lang === 'ar' ? ' من أصل ' : ' out of ') + currentQuestions.length + (lang === 'ar' ? ' أسئلة بشكل صحيح.' : ' questions correctly.')">لقد أجبت على الأسئلة بنجاح.</p>
+            <div class="glass-card p-6 md:p-8 rounded-3xl text-center shadow-2xl space-y-5 relative overflow-hidden">
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border shadow-lg bg-emerald-600/10 text-emerald-300 border-emerald-600/30">
+                    <span x-text="getResultBadgeText()">وسام الإنجاز</span>
                 </div>
 
-                <div class="flex flex-wrap justify-center gap-4 pt-2">
-                    <button @click="restartCurrentQuiz()" class="px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-2xl shadow-lg shadow-cyan-600/30 text-sm transition-all">
-                        <span x-text="lang === 'ar' ? 'إعادة الاختبار' : 'Retake Quiz'">إعادة الاختبار</span>
+                <div class="w-24 h-24 md:w-28 md:h-28 bg-emerald-600/10 border border-emerald-600/40 rounded-full flex items-center justify-center mx-auto text-emerald-400 text-3xl md:text-4xl font-black shadow-xl shadow-emerald-900/30" x-text="getResultPercentage() + '%'">
+                    85%
+                </div>
+                <div class="space-y-1.5">
+                    <h3 class="text-xl md:text-3xl font-black text-white" x-text="getResultTitle()">أحسنت! أداء ممتاز</h3>
+                    <p class="text-slate-400 text-xs md:text-sm" x-text="(lang === 'ar' ? 'لقد أجبت على ' : 'You answered ') + score + (lang === 'ar' ? ' من أصل ' : ' out of ') + currentQuestions.length + (lang === 'ar' ? ' أسئلة بشكل صحيح.' : ' questions correctly.')">لقد أجبت على الأسئلة بنجاح.</p>
+                </div>
+
+                <div class="flex flex-wrap justify-center gap-3 pt-2">
+                    <button @click="restartCurrentQuiz()" class="px-5 py-2.5 bg-gradient-to-r from-emerald-700 to-emerald-900 text-white font-bold rounded-2xl shadow-lg shadow-emerald-900/40 text-xs md:text-sm transition-all">
+                        <span x-text="lang === 'ar' ? 'إعادة الاختبار' : 'Retake'">إعادة الاختبار</span>
                     </button>
-                    <button @click="openStudyGuide()" class="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold rounded-2xl text-sm transition-all border border-cyan-500/40 shadow">
-                        <span x-text="lang === 'ar' ? 'فتح دليل الشرح والمراجعة الكاملة' : 'Open Full Study Guide'">دليل الشرح</span>
+                    <button x-show="hasMistakes()" @click="retakeMistakesOnly()" class="px-5 py-2.5 bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 font-bold rounded-2xl text-xs md:text-sm transition-all border border-emerald-600/40 shadow">
+                        <span x-text="lang === 'ar' ? 'إعادة الأخطاء فقط' : 'Retake Mistakes'">إعادة الأخطاء فقط</span>
                     </button>
-                    <button @click="returnToHome()" class="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-slate-200 font-semibold rounded-2xl text-sm transition-all border border-slate-700 shadow">
-                        <span x-text="lang === 'ar' ? 'العودة للقائمة الرئيسية' : 'Back to Menu'">العودة للقائمة الرئيسية</span>
+                    <button @click="returnToHome()" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-200 font-semibold rounded-2xl text-xs md:text-sm transition-all border border-emerald-900/60 shadow">
+                        <span x-text="lang === 'ar' ? 'القائمة الرئيسية' : 'Menu'">القائمة الرئيسية</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Detailed Answer Breakdown -->
-            <div class="space-y-4">
-                <h4 class="text-lg font-bold text-white flex items-center gap-2">
-                    <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    <span x-text="lang === 'ar' ? 'مراجعة الإجابات، الأخطاء، وطريقة الحل المفصلة' : 'Detailed Review, Mistake Analysis & Step-by-Step Solutions'">مراجعة الإجابات وطريقة الحل المفصلة</span>
+            <div class="space-y-3">
+                <h4 class="text-base font-bold text-white">
+                    <span x-text="lang === 'ar' ? 'مراجعة الإجابات والأخطاء' : 'Detailed Review'">مراجعة الإجابات والأخطاء</span>
                 </h4>
                 <div class="space-y-3">
                     <template x-for="(item, idx) in userHistory" :key="idx">
-                        <div class="p-6 rounded-2xl border transition-all shadow-lg space-y-3"
-                             :class="item.isCorrect ? 'bg-emerald-950/20 border-emerald-500/30' : 'bg-rose-950/20 border-rose-500/30'">
+                        <div class="p-5 rounded-2xl border transition-all shadow-lg space-y-2.5"
+                             :class="item.isCorrect ? 'bg-emerald-950/20 border-emerald-500/30' : 'bg-red-950/20 border-red-500/30'">
                             <div class="flex justify-between items-start">
-                                <span class="text-xs font-bold text-slate-400" x-text="(lang === 'ar' ? 'السؤال رقم ' : 'Question #') + (idx + 1)">السؤال</span>
-                                <span class="text-xs px-3 py-1 rounded-full font-bold"
-                                      :class="item.isCorrect ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'"
-                                      x-text="item.isCorrect ? (lang === 'ar' ? 'صحيح (Correct)' : 'Correct') : (lang === 'ar' ? 'خطأ (Incorrect)' : 'Incorrect')">صحيح</span>
+                                <span class="text-xs font-bold text-slate-400" x-text="(lang === 'ar' ? 'السؤال ' : 'Question ') + (idx + 1)">السؤال</span>
+                                <span class="text-[11px] px-2.5 py-0.5 rounded-full font-bold"
+                                      :class="item.isCorrect ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'"
+                                      x-text="item.isCorrect ? (lang === 'ar' ? 'صحيح' : 'Correct') : (lang === 'ar' ? 'خطأ' : 'Incorrect')">صحيح</span>
                             </div>
-                            <p class="text-base font-bold text-white" x-text="item.question">نص السؤال</p>
+                            <p class="text-sm md:text-base font-bold text-white" x-text="item.question">نص السؤال</p>
                             
-                            <div class="text-xs space-y-2 pt-3 border-t border-slate-800">
+                            <div class="text-xs space-y-2 pt-2 border-t border-emerald-900/40">
                                 <p class="text-slate-300">
                                     <span class="font-bold" x-text="lang === 'ar' ? 'إجابتك: ' : 'Your Answer: '">إجابتك: </span>
-                                    <span :class="item.isCorrect ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'" x-text="item.selected !== null ? item.options[item.selected] : (lang === 'ar' ? 'لم تقم بالإجابة (بدون إجابة)' : 'No Answer')">إجابة المستخدم</span>
+                                    <span :class="item.isCorrect ? 'text-emerald-400 font-bold' : 'text-red-400 font-bold'" x-text="item.selected !== null ? item.options[item.selected] : (lang === 'ar' ? 'بدون إجابة' : 'No Answer')">إجابة المستخدم</span>
                                 </p>
                                 <p x-show="!item.isCorrect" class="text-slate-300">
                                     <span class="font-bold" x-text="lang === 'ar' ? 'الإجابة الصحيحة: ' : 'Correct Answer: '">الإجابة الصحيحة: </span>
                                     <span class="text-emerald-400 font-bold" x-text="item.options[item.correct]">الإجابة الصحيحة</span>
                                 </p>
-                                <div class="text-slate-300 mt-2 bg-slate-900/90 p-4 rounded-xl border border-slate-800 space-y-1 leading-relaxed">
-                                    <p class="font-bold text-cyan-400 flex items-center gap-1.5">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                        <span x-text="lang === 'ar' ? 'الشرح وطريقة الحل المفصلة:' : 'Explanation & Solution Method:'">الشرح وطريقة الحل:</span>
-                                    </p>
+                                <div class="text-slate-300 mt-2 bg-slate-900/90 p-3.5 rounded-xl border border-emerald-900/40 space-y-1 leading-relaxed">
+                                    <p class="font-bold text-emerald-400">الشرح العلمي وطريقة الحل:</p>
                                     <p class="text-slate-200 text-xs leading-relaxed" x-text="item.explanation">شرح تفصيلي...</p>
                                 </div>
                             </div>
@@ -312,53 +308,63 @@
             </div>
         </div>
 
-        <!-- VIEW 4: STUDY GUIDE & EXPLANATION BANK -->
+        <!-- 4. دليل الشرح والمسائل -->
         <div x-show="currentView === 'study_guide'" class="space-y-6" x-transition:enter="transition ease-out duration-300">
-            <div class="glass-card p-6 md:p-8 rounded-3xl shadow-2xl space-y-6">
-                <div class="flex flex-wrap justify-between items-center gap-4 border-b border-slate-800 pb-4">
+            <div class="glass-card p-5 md:p-8 rounded-3xl shadow-2xl space-y-5">
+                <div class="flex flex-wrap justify-between items-center gap-3 border-b border-emerald-900/40 pb-4">
                     <div>
-                        <span class="bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs px-3 py-1 rounded-full font-bold">Study Bank & Explanations</span>
-                        <h3 class="text-xl md:text-2xl font-black text-white mt-1" x-text="lang === 'ar' ? 'دليل الشرح الكامل والمسائل للأسئلة' : 'Complete Study Guide & Problem Solutions'">دليل الشرح الكامل والمسائل</h3>
+                        <span class="bg-emerald-600/10 text-emerald-400 border border-emerald-600/30 text-[11px] px-2.5 py-1 rounded-full font-bold">Study Guide</span>
+                        <h3 class="text-lg md:text-2xl font-black text-white mt-1" x-text="lang === 'ar' ? 'دليل الشرح الكامل والمسائل' : 'Complete Study Guide'">دليل الشرح الكامل والمسائل</h3>
                     </div>
-                    <button @click="returnToHome()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors">
-                        &larr; <span x-text="lang === 'ar' ? 'العودة للقائمة' : 'Back to Menu'">العودة للقائمة</span>
+                    <button @click="returnToHome()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-emerald-900/60 transition-colors">
+                        &larr; <span x-text="lang === 'ar' ? 'العودة' : 'Back'">العودة</span>
                     </button>
                 </div>
 
-                <!-- Subject selector for study guide -->
-                <div class="flex gap-2 flex-wrap">
-                    <button x-show="isSubjectVisible('aqeedah')" @click="studyGuideSubject = 'aqeedah'" :class="studyGuideSubject === 'aqeedah' ? 'bg-amber-600 text-white border-amber-400' : 'bg-slate-900 text-slate-300 border-slate-700'" class="px-4 py-2 rounded-xl text-xs font-bold border transition-all">العقيدة الإسلامية</button>
-                    <button @click="studyGuideSubject = 'chem'" :class="studyGuideSubject === 'chem' ? 'bg-cyan-600 text-white border-cyan-400' : 'bg-slate-900 text-slate-300 border-slate-700'" class="px-4 py-2 rounded-xl text-xs font-bold border transition-all">Chemistry</button>
-                    <button @click="studyGuideSubject = 'math'" :class="studyGuideSubject === 'math' ? 'bg-indigo-600 text-white border-indigo-400' : 'bg-slate-900 text-slate-300 border-slate-700'" class="px-4 py-2 rounded-xl text-xs font-bold border transition-all">Mathematics</button>
-                    <button @click="studyGuideSubject = 'comp'" :class="studyGuideSubject === 'comp' ? 'bg-blue-600 text-white border-blue-400' : 'bg-slate-900 text-slate-300 border-slate-700'" class="px-4 py-2 rounded-xl text-xs font-bold border transition-all">Computer Science</button>
+                <div class="flex flex-col sm:flex-row gap-3 justify-between items-center">
+                    <div class="flex gap-1.5 flex-wrap w-full sm:w-auto">
+                        <button @click="studyGuideSubject = 'aqeedah'; searchQuery = ''" :class="studyGuideSubject === 'aqeedah' ? 'bg-emerald-700 text-white border-emerald-500' : 'bg-slate-900 text-slate-300 border-emerald-900/60'" class="px-3 py-1.5 rounded-xl text-xs font-bold border transition-all">العقيدة</button>
+                        <button @click="studyGuideSubject = 'chem'; searchQuery = ''" :class="studyGuideSubject === 'chem' ? 'bg-emerald-700 text-white border-emerald-500' : 'bg-slate-900 text-slate-300 border-emerald-900/60'" class="px-3 py-1.5 rounded-xl text-xs font-bold border transition-all">Chemistry</button>
+                        <button @click="studyGuideSubject = 'math'; searchQuery = ''" :class="studyGuideSubject === 'math' ? 'bg-emerald-700 text-white border-emerald-500' : 'bg-slate-900 text-slate-300 border-emerald-900/60'" class="px-3 py-1.5 rounded-xl text-xs font-bold border transition-all">Math</button>
+                        <button @click="studyGuideSubject = 'comp'; searchQuery = ''" :class="studyGuideSubject === 'comp' ? 'bg-emerald-700 text-white border-emerald-500' : 'bg-slate-900 text-slate-300 border-emerald-900/60'" class="px-3 py-1.5 rounded-xl text-xs font-bold border transition-all">Computer</button>
+                    </div>
+                    <div class="w-full sm:w-64">
+                        <input type="text" x-model="searchQuery" :placeholder="lang === 'ar' ? 'بحث سريع...' : 'Search...'" class="w-full bg-slate-900 border border-emerald-900/60 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
+                    </div>
                 </div>
 
-                <!-- List of all questions with answers & detailed solutions -->
-                <div class="space-y-4 pt-2">
-                    <template x-for="(qItem, qIdx) in quizzesData[studyGuideSubject][lang].questions" :key="qIdx">
-                        <div class="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3 shadow-lg">
+                <div class="space-y-3.5 pt-1">
+                    <template x-for="(qItem, qIdx) in filteredStudyQuestions" :key="qIdx">
+                        <div class="p-4 md:p-5 rounded-2xl bg-slate-900/90 border border-emerald-900/40 space-y-2.5 shadow-lg relative">
                             <div class="flex justify-between items-center text-xs text-slate-400 font-mono">
-                                <span class="text-cyan-400 font-bold" x-text="(lang === 'ar' ? 'السؤال رقم ' : 'Question #') + (qIdx + 1)">السؤال</span>
-                                <span class="bg-slate-800 px-2.5 py-1 rounded-lg text-slate-300" x-text="quizzesData[studyGuideSubject].category">Category</span>
+                                <span class="text-emerald-400 font-bold" x-text="(lang === 'ar' ? 'السؤال ' : 'Question ') + (qIdx + 1)">السؤال</span>
+                                <div class="flex items-center gap-1.5">
+                                    <button @click="toggleBookmark(qItem)" class="px-2 py-1 rounded-lg text-[11px] border transition-colors flex items-center gap-1"
+                                            :class="isBookmarked(qItem) ? 'bg-emerald-600/20 text-emerald-300 border-emerald-600/40' : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-emerald-300'">
+                                        <svg class="w-3 h-3" :fill="isBookmarked(qItem) ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg>
+                                        <span x-text="isBookmarked(qItem) ? (lang === 'ar' ? 'محفوظ' : 'Saved') : (lang === 'ar' ? 'حفظ' : 'Save')">حفظ</span>
+                                    </button>
+                                    <button @click="navigator.clipboard.writeText(qItem.q + '\n' + qItem.options.join(', ') + '\nالشرح: ' + qItem.explanation); alert(lang === 'ar' ? 'تم النسخ!' : 'Copied!');" class="text-slate-400 hover:text-emerald-300 bg-slate-800 px-2 py-1 rounded-lg text-[11px] transition-colors flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                        <span x-text="lang === 'ar' ? 'نسخ' : 'Copy'">نسخ</span>
+                                    </button>
+                                </div>
                             </div>
-                            <p class="text-sm md:text-base font-bold text-white" x-text="qItem.q">نص السؤال</p>
+                            <p class="text-xs md:text-sm font-bold text-white" x-text="qItem.q">نص السؤال</p>
                             
                             <div class="grid sm:grid-cols-2 gap-2 pt-1">
                                 <template x-for="(optText, optIdx) in qItem.options" :key="optIdx">
-                                    <div class="p-3 rounded-xl border text-xs flex items-center justify-between"
+                                    <div class="p-2.5 rounded-xl border text-[11px] md:text-xs flex items-center justify-between"
                                            :class="optIdx === qItem.correct ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-200 font-bold' : 'bg-slate-950/40 border-slate-800 text-slate-400'">
                                         <span x-text="optText">الخيار</span>
-                                        <span class="font-mono text-xs opacity-70" x-text="String.fromCharCode(65 + optIdx)">A</span>
+                                        <span class="font-mono text-[10px] opacity-70" x-text="String.fromCharCode(65 + optIdx)">A</span>
                                     </div>
                                 </template>
                             </div>
 
-                            <div class="bg-cyan-950/20 border border-cyan-500/30 p-3.5 rounded-xl text-xs space-y-1 mt-2">
-                                <p class="font-bold text-cyan-300 flex items-center gap-1">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
-                                    <span x-text="lang === 'ar' ? 'طريقة الحل والشرح العلمي المفصل:' : 'Detailed Solution & Explanation:'">الشرح وطريقة الحل:</span>
-                                </p>
-                                <p class="text-slate-200 leading-relaxed" x-text="qItem.explanation">شرح السؤال...</p>
+                            <div class="bg-emerald-950/20 border border-emerald-500/30 p-3 rounded-xl text-xs space-y-1 mt-1.5">
+                                <p class="font-bold text-emerald-300 text-[11px]">الشرح العلمي وطريقة الحل:</p>
+                                <p class="text-slate-200 leading-relaxed text-[11px] md:text-xs" x-text="qItem.explanation">شرح السؤال...</p>
                             </div>
                         </div>
                     </template>
@@ -366,58 +372,272 @@
             </div>
         </div>
 
+        <!-- 5. بنك المفضلة -->
+        <div x-show="currentView === 'bookmarks'" class="space-y-6" x-transition:enter="transition ease-out duration-300">
+            <div class="glass-card p-5 md:p-8 rounded-3xl shadow-2xl space-y-5">
+                <div class="flex justify-between items-center border-b border-emerald-900/40 pb-4">
+                    <div>
+                        <span class="bg-emerald-600/10 text-emerald-400 border border-emerald-600/30 text-[11px] px-2.5 py-1 rounded-full font-bold">Bookmarks</span>
+                        <h3 class="text-lg md:text-2xl font-black text-white mt-1" x-text="lang === 'ar' ? 'بنك الأسئلة المفضلة والمحفوظة' : 'My Bookmarked Questions'">بنك المفضلة</h3>
+                    </div>
+                    <button @click="returnToHome()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-emerald-900/60 transition-colors">
+                        &larr; <span x-text="lang === 'ar' ? 'العودة' : 'Back'">العودة</span>
+                    </button>
+                </div>
+
+                <div x-show="bookmarks.length === 0" class="text-center py-12 text-slate-400 text-xs">
+                    <p x-text="lang === 'ar' ? 'لا توجد أسئلة محفوظة في بنك المفضلة حالياً.' : 'No bookmarked questions found.'">لا توجد أسئلة محفوظة.</p>
+                </div>
+
+                <div class="space-y-3.5">
+                    <template x-for="(qItem, qIdx) in bookmarks" :key="qIdx">
+                        <div class="p-4 rounded-2xl bg-slate-900/90 border border-emerald-900/40 space-y-2.5 shadow-lg relative">
+                            <div class="flex justify-between items-center text-xs text-slate-400 font-mono">
+                                <span class="text-emerald-400 font-bold" x-text="'سؤال محفوظ #' + (qIdx + 1)">السؤال المحفوظ</span>
+                                <button @click="toggleBookmark(qItem)" class="text-red-400 hover:text-red-300 text-[11px] font-bold bg-red-950/40 px-2.5 py-1 rounded-lg border border-red-500/30">
+                                    <span x-text="lang === 'ar' ? 'إزالة' : 'Remove'">إزالة</span>
+                                </button>
+                            </div>
+                            <p class="text-xs md:text-sm font-bold text-white" x-text="qItem.q">نص السؤال</p>
+                            <div class="bg-emerald-950/20 border border-emerald-500/30 p-3 rounded-xl text-xs space-y-1">
+                                <p class="font-bold text-emerald-300 text-[11px]">الشرح العلمي:</p>
+                                <p class="text-slate-200 leading-relaxed text-[11px] md:text-xs" x-text="qItem.explanation">شرح السؤال...</p>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. بطاقات الاستذكار -->
+        <div x-show="currentView === 'flashcards'" class="space-y-6" x-transition:enter="transition ease-out duration-300">
+            <div class="glass-card p-5 md:p-8 rounded-3xl shadow-2xl space-y-5 text-center">
+                <div class="flex justify-between items-center border-b border-emerald-900/40 pb-4">
+                    <div class="text-right">
+                        <span class="bg-emerald-600/10 text-emerald-400 border border-emerald-600/30 text-[11px] px-2.5 py-1 rounded-full font-bold">Flashcards</span>
+                        <h3 class="text-lg md:text-2xl font-black text-white mt-1" x-text="lang === 'ar' ? 'بطاقات الاستذكار السريع' : 'Study Flashcards'">بطاقات الاستذكار</h3>
+                    </div>
+                    <button @click="returnToHome()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-emerald-900/60 transition-colors">
+                        &larr; <span x-text="lang === 'ar' ? 'العودة' : 'Back'">العودة</span>
+                    </button>
+                </div>
+
+                <div class="py-4 space-y-5">
+                    <div class="bg-slate-900 border border-emerald-900/60 p-6 md:p-8 rounded-3xl shadow-2xl min-h-[200px] flex flex-col justify-center items-center cursor-pointer transition-all hover:border-emerald-500"
+                         @click="flashcardFlipped = !flashcardFlipped">
+                        <span class="text-[11px] text-emerald-400 font-mono mb-2" x-text="flashcardFlipped ? (lang === 'ar' ? '✨ الإجابة والشرح' : '✨ Answer') : (lang === 'ar' ? '❓ اضغط لقلب البطاقة' : '❓ Click to flip')">السؤال</span>
+                        <p class="text-sm md:text-lg font-bold text-white max-w-xl leading-relaxed" x-text="flashcardFlipped ? getCurrentFlashcard().explanation : getCurrentFlashcard().q"></p>
+                    </div>
+
+                    <div class="flex justify-center items-center gap-3">
+                        <button @click="prevFlashcard(); flashcardFlipped = false;" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-emerald-900/60 rounded-xl text-xs font-bold text-slate-300">
+                            &rarr; <span x-text="lang === 'ar' ? 'السابقة' : 'Prev'">السابقة</span>
+                        </button>
+                        <span class="text-xs font-mono text-emerald-300" x-text="(flashcardIndex + 1) + ' / ' + getFlashcardsList().length">1 / 10</span>
+                        <button @click="nextFlashcard(); flashcardFlipped = false;" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 rounded-xl text-xs font-bold text-white">
+                            <span x-text="lang === 'ar' ? 'التالية' : 'Next'">التالية</span> &larr;
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. مؤشرات الأداء الأكاديمي -->
+        <div x-show="currentView === 'analytics'" class="space-y-6" x-transition:enter="transition ease-out duration-300">
+            <div class="glass-card p-5 md:p-8 rounded-3xl shadow-2xl space-y-5">
+                <div class="flex justify-between items-center border-b border-emerald-900/40 pb-4">
+                    <div>
+                        <span class="bg-emerald-600/10 text-emerald-400 border border-emerald-600/30 text-[11px] px-2.5 py-1 rounded-full font-bold">Analytics</span>
+                        <h3 class="text-lg md:text-2xl font-black text-white mt-1" x-text="lang === 'ar' ? 'مؤشرات الأداء الأكاديمي' : 'Performance Analytics'">مؤشرات الأداء الأكاديمي</h3>
+                    </div>
+                    <button @click="returnToHome()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-emerald-900/60 transition-colors">
+                        &larr; <span x-text="lang === 'ar' ? 'العودة' : 'Back'">العودة</span>
+                    </button>
+                </div>
+
+                <div class="grid sm:grid-cols-3 gap-3.5 text-center">
+                    <div class="bg-slate-900 p-5 rounded-2xl border border-emerald-900/40 space-y-1.5">
+                        <p class="text-xs text-slate-400" x-text="lang === 'ar' ? 'الاختبارات المنجزة' : 'Total Quizzes'">الاختبارات المنجزة</p>
+                        <div class="text-2xl md:text-3xl font-black text-emerald-400" x-text="statsTotalQuizzes">0</div>
+                    </div>
+                    <div class="bg-slate-900 p-5 rounded-2xl border border-emerald-900/40 space-y-1.5">
+                        <p class="text-xs text-slate-400" x-text="lang === 'ar' ? 'متوسط الدرجات' : 'Average Score'">متوسط الدرجات</p>
+                        <div class="text-2xl md:text-3xl font-black text-emerald-300" x-text="statsAvgScore + '%'">0%</div>
+                    </div>
+                    <div class="bg-slate-900 p-5 rounded-2xl border border-emerald-900/40 space-y-1.5">
+                        <p class="text-xs text-slate-400" x-text="lang === 'ar' ? 'الأسئلة المحفوظة' : 'Bookmarks'">الأسئلة المحفوظة</p>
+                        <div class="text-2xl md:text-3xl font-black text-emerald-400" x-text="bookmarks.length">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. المحاكي والاختبار الحر -->
+        <div x-show="currentView === 'custom_quiz'" class="space-y-6" x-transition:enter="transition ease-out duration-300">
+            <div class="glass-card p-5 md:p-8 rounded-3xl shadow-2xl space-y-5">
+                <div class="flex justify-between items-center border-b border-emerald-900/40 pb-4">
+                    <div>
+                        <span class="bg-emerald-600/10 text-emerald-400 border border-emerald-600/30 text-[11px] px-2.5 py-1 rounded-full font-bold">Custom Quiz</span>
+                        <h3 class="text-lg md:text-2xl font-black text-white mt-1" x-text="lang === 'ar' ? 'المحاكي والاختبار الحر' : 'Custom Practice Quiz'">المحاكي والاختبار الحر</h3>
+                    </div>
+                    <button @click="returnToHome()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-emerald-900/60 transition-colors">
+                        &larr; <span x-text="lang === 'ar' ? 'العودة' : 'Back'">العودة</span>
+                    </button>
+                </div>
+
+                <div class="space-y-4 max-w-md mx-auto">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-2" x-text="lang === 'ar' ? 'اختر المادة:' : 'Select Subject:'">اختر المادة:</label>
+                        <select x-model="customSubject" class="w-full bg-slate-900 border border-emerald-900/60 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+                            <option value="aqeedah">العقيدة الإسلامية</option>
+                            <option value="chem">الكيمياء</option>
+                            <option value="math">الرياضيات</option>
+                            <option value="comp">الحاسب الآلي</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-2" x-text="lang === 'ar' ? 'عدد الأسئلة:' : 'Number of Questions:'">عدد الأسئلة:</label>
+                        <select x-model.number="customCount" class="w-full bg-slate-900 border border-emerald-900/60 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+                            <option value="5">5 أسئلة (سريع)</option>
+                            <option value="10">10 أسئلة (متوسط)</option>
+                            <option value="20">20 سؤال (شامل)</option>
+                        </select>
+                    </div>
+                    <button @click="startCustomQuiz()" class="w-full py-3 bg-gradient-to-r from-emerald-700 to-emerald-900 text-white font-bold rounded-xl shadow-lg shadow-emerald-900/40 text-xs md:text-sm transition-all">
+                        <span x-text="lang === 'ar' ? 'بدء المحاكي الحر' : 'Start Custom Quiz'">بدء المحاكي الحر</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 9. دفتر الملاحظات الشخصي -->
+        <div x-show="currentView === 'notes'" class="space-y-6" x-transition:enter="transition ease-out duration-300">
+            <div class="glass-card p-5 md:p-8 rounded-3xl shadow-2xl space-y-5">
+                <div class="flex justify-between items-center border-b border-emerald-900/40 pb-4">
+                    <div>
+                        <span class="bg-emerald-600/10 text-emerald-400 border border-emerald-600/30 text-[11px] px-2.5 py-1 rounded-full font-bold">Notes</span>
+                        <h3 class="text-lg md:text-2xl font-black text-white mt-1" x-text="lang === 'ar' ? 'دفتر الملاحظات الشخصي' : 'Personal Study Notes'">دفتر الملاحظات الشخصي</h3>
+                    </div>
+                    <button @click="returnToHome()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-emerald-900/60 transition-colors">
+                        &larr; <span x-text="lang === 'ar' ? 'العودة' : 'Back'">العودة</span>
+                    </button>
+                </div>
+
+                <div class="space-y-3">
+                    <p class="text-xs text-slate-400" x-text="lang === 'ar' ? 'تدوين القوانين والملاحظات المهمة. يتم الحفظ تلقائياً في المتصفح.' : 'Write notes. Saved automatically.'">تدوين القوانين والملاحظات. الحفظ تلقائي.</p>
+                    <textarea x-model="userNotes" @input="saveNotes()" rows="8" 
+                              class="w-full bg-slate-900 border border-emerald-900/60 rounded-2xl p-4 text-xs md:text-sm text-slate-100 focus:outline-none focus:border-emerald-500 shadow-inner leading-relaxed"
+                              :placeholder="lang === 'ar' ? 'اكتب ملاحظاتك هنا...' : 'Type notes here...'"></textarea>
+                    <div class="flex justify-between items-center text-xs text-slate-400">
+                        <span x-text="lang === 'ar' ? '✨ محفوظ محلياً' : '✨ Saved locally'">محفوظ محلياً</span>
+                        <button @click="userNotes = ''; saveNotes(); alert(lang === 'ar' ? 'تم الحذف' : 'Cleared')" class="text-red-400 hover:text-red-300 font-semibold">
+                            <span x-text="lang === 'ar' ? 'مسح الكل' : 'Clear All'">مسح الكل</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 10. حاسبة التقديرات والمعدل -->
+        <div x-show="currentView === 'calculator'" class="space-y-6" x-transition:enter="transition ease-out duration-300">
+            <div class="glass-card p-5 md:p-8 rounded-3xl shadow-2xl space-y-5">
+                <div class="flex justify-between items-center border-b border-emerald-900/40 pb-4">
+                    <div>
+                        <span class="bg-emerald-600/10 text-emerald-400 border border-emerald-600/30 text-[11px] px-2.5 py-1 rounded-full font-bold">Calculator</span>
+                        <h3 class="text-lg md:text-2xl font-black text-white mt-1" x-text="lang === 'ar' ? 'حاسبة التقديرات والمعدل' : 'GPA Calculator'">حاسبة التقديرات والمعدل</h3>
+                    </div>
+                    <button @click="returnToHome()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-emerald-900/60 transition-colors">
+                        &larr; <span x-text="lang === 'ar' ? 'العودة' : 'Back'">العودة</span>
+                    </button>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-5 items-center">
+                    <div class="space-y-3.5">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1.5" x-text="lang === 'ar' ? 'الأسئلة الصحيحة:' : 'Correct Answers:'">الأسئلة الصحيحة:</label>
+                            <input type="number" x-model.number="calcCorrect" min="0" class="w-full bg-slate-900 border border-emerald-900/60 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1.5" x-text="lang === 'ar' ? 'إجمالي الأسئلة:' : 'Total Questions:'">إجمالي الأسئلة:</label>
+                            <input type="number" x-model.number="calcTotal" min="1" class="w-full bg-slate-900 border border-emerald-900/60 rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
+                        </div>
+                    </div>
+                    <div class="glass-card p-6 rounded-2xl text-center space-y-2 bg-emerald-950/20 border-emerald-500/30">
+                        <span class="text-xs text-emerald-400 font-bold" x-text="lang === 'ar' ? 'التقدير الأكاديمي' : 'Grade'">التقدير الأكاديمي</span>
+                        <div class="text-3xl md:text-4xl font-black text-white" x-text="calculateGPA().percentage + '%'">0%</div>
+                        <p class="text-xs md:text-sm font-bold text-emerald-300" x-text="calculateGPA().grade">ممتاز</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 11. مؤقت بومودورو للتركيز -->
+        <div x-show="currentView === 'pomodoro'" class="space-y-6" x-transition:enter="transition ease-out duration-300">
+            <div class="glass-card p-5 md:p-8 rounded-3xl shadow-2xl space-y-5 text-center">
+                <div class="flex justify-between items-center border-b border-emerald-900/40 pb-4">
+                    <div class="text-right">
+                        <span class="bg-emerald-600/10 text-emerald-400 border border-emerald-600/30 text-[11px] px-2.5 py-1 rounded-full font-bold">Pomodoro</span>
+                        <h3 class="text-lg md:text-2xl font-black text-white mt-1" x-text="lang === 'ar' ? 'مؤقت بومودورو للتركيز' : 'Pomodoro Timer'">مؤقت بومودورو للتركيز</h3>
+                    </div>
+                    <button @click="returnToHome()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-emerald-900/60 transition-colors">
+                        &larr; <span x-text="lang === 'ar' ? 'العودة' : 'Back'">العودة</span>
+                    </button>
+                </div>
+
+                <div class="py-6 space-y-4">
+                    <div class="text-5xl md:text-7xl font-mono font-black text-emerald-400 glow-effect" x-text="formatPomodoroTime()">25:00</div>
+                    <p class="text-xs md:text-sm text-slate-400" x-text="pomoRunning ? (lang === 'ar' ? '🔥 جلسة تركيز نشطة!' : '🔥 Session active!') : (lang === 'ar' ? 'جاهز للبدء' : 'Ready')">جاهز للبدء</p>
+                    
+                    <div class="flex justify-center gap-3 pt-2">
+                        <button @click="startPomodoro()" x-show="!pomoRunning" class="px-5 py-2.5 bg-gradient-to-r from-emerald-700 to-emerald-900 text-white font-bold rounded-xl text-xs md:text-sm shadow-lg shadow-emerald-900/40">
+                            <span x-text="lang === 'ar' ? 'بدء (25 دقيقة)' : 'Start'">بدء</span>
+                        </button>
+                        <button @click="pausePomodoro()" x-show="pomoRunning" class="px-5 py-2.5 bg-amber-600 text-white font-bold rounded-xl text-xs md:text-sm shadow">
+                            <span x-text="lang === 'ar' ? 'إيقاف مؤقت' : 'Pause'">إيقاف</span>
+                        </button>
+                        <button @click="resetPomodoro()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs md:text-sm border border-emerald-900/60">
+                            <span x-text="lang === 'ar' ? 'إعادة ضبط' : 'Reset'">إعادة ضبط</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </main>
 
-    <!-- Professional Creator Footer -->
-    <footer class="glass-card border-t border-slate-800 text-center py-6 mt-12 text-xs text-slate-400 z-10">
-        <div class="max-w-4xl mx-auto px-4 space-y-2">
-            <p class="font-bold text-slate-200 tracking-wide">
-                <span x-text="lang === 'ar' ? 'صنع بإتقان وإشراف عن طريق ' : 'Crafted with excellence by '">صنع بإتقان عن طريق </span>
-                <span class="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent font-black text-sm">هزاع الهزاع (hazzaa alhazzaa)</span>
-            </p>
-            <p class="text-slate-400" x-text="lang === 'ar' ? 'منصة تعليمية ذكية ومصممة خصيصاً لقسم المتوسط من طلبة كلية الملك عبدالله للدفاع الجوي' : 'An intelligent educational platform specifically designed for the intermediate section of students at King Abdullah Air Defense Academy'">منصة تعليمية ذكية لكلية الملك عبدالله للدفاع الجوي</p>
+    <!-- الذيل (Footer) -->
+    <footer class="glass-card border-t border-emerald-900/50 mt-12 py-6 text-xs text-slate-400 z-10">
+        <div class="max-w-6xl mx-auto px-4 grid md:grid-cols-3 gap-4 items-center text-center" :class="lang === 'ar' ? 'md:text-right' : 'md:text-left'">
+            <div class="space-y-0.5">
+                <p class="font-bold text-slate-200 text-xs md:text-sm" x-text="lang === 'ar' ? 'كلية الملك عبدالله للدفاع الجوي' : 'King Abdullah Air Defense Academy'"></p>
+                <p class="text-slate-400 text-[11px]" x-text="lang === 'ar' ? 'قسم طلبة المتوسط - منصة الاختبارات والمذاكرة الذكية' : 'Intermediate Section - Smart Quiz & Study Hub'"></p>
+            </div>
+            <div class="space-y-0.5 text-center">
+                <p class="font-bold text-emerald-400 tracking-wide text-[11px]">
+                    <span x-text="lang === 'ar' ? 'إشراف: ' : 'Supervised by: '"></span>
+                    <span class="text-white font-black">هزاع الهزاع</span>
+                </p>
+                <p class="text-slate-400 text-[10px]" x-text="lang === 'ar' ? 'جميع الحقوق محفوظة © 2026' : 'All Rights Reserved © 2026'"></p>
+            </div>
+            <div class="flex justify-center md:justify-end">
+                <span class="bg-emerald-600/10 text-emerald-300 border border-emerald-600/30 px-2.5 py-1 rounded-xl font-mono text-[10px]" x-text="lang === 'ar' ? 'نظام آمن' : 'Secure System'"></span>
+            </div>
         </div>
     </footer>
 
-    <!-- Modular Script Files -->
-    <script src="aqeedah.js"></script>
-    <script src="fiqh.js"></script>
-    <script src="chemistry.js"></script>
-    <script src="math.js"></script>
-    <script src="computer.js"></script>
-    <script src="script.js"></script>
+    <!-- ربط السكربتات -->
+    <script src="./aqeedah.js"></script>
+    <script src="./chemistry.js"></script>
+    <script src="./math.js"></script>
+    <script src="./computer.js"></script>
+    <script src="./script.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
                     .then((reg) => console.log('Service Worker registered successfully!', reg))
-                    .catch((err) => console.log('Service Worker registration failed:', err));
+                    .catch((err) => console.log('Service Worker registration failure:', err));
             });
-        }
-
-        function passwordProtection() {
-            return {
-                isAuthenticated: localStorage.getItem('kaada_auth') === 'true',
-                inputPassword: '',
-                showError: false,
-                correctHash: '8c2901639d6e87aeb4f4e2f9d5e38d6c7028df483d8e5781a742c8d203994cfa',
-
-                async checkPassword() {
-                    const msgBuffer = new TextEncoder().encode(this.inputPassword);
-                    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-                    const hashArray = Array.from(new Uint8Array(hashBuffer));
-                    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-                    if (hashHex === this.correctHash) {
-                        localStorage.setItem('kaada_auth', 'true');
-                        this.isAuthenticated = true;
-                        this.showError = false;
-                    } else {
-                        this.showError = true;
-                        this.inputPassword = '';
-                    }
-                }
-            }
         }
     </script>
 </body>
