@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول | كلية الملك عبدالله للدفاع الجوي</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Cairo', sans-serif; }</style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-4">
+
+    <div class="max-w-md w-full p-8 rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl space-y-6 text-center">
+        <div class="bg-gradient-to-tr from-cyan-500 to-blue-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto text-white shadow-lg shadow-cyan-500/30">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+        </div>
+        <div>
+            <h2 class="text-xl font-black text-white">تسجيل الدخول للمنصة</h2>
+            <p class="text-xs text-slate-400 mt-1">الرجاء إدخال كلمة المرور للمتابعة</p>
+        </div>
+
+        <form id="loginForm" class="space-y-4">
+            <input type="password" id="passwordInput" placeholder="أدخل كلمة المرور..." required
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-center text-white focus:outline-none focus:border-cyan-500 shadow-inner">
+            
+            <p id="errorMsg" class="text-xs text-rose-400 font-semibold hidden">كلمة المرور غير صحيحة، حاول مرة أخرى.</p>
+
+            <button type="submit" class="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl shadow-lg shadow-cyan-600/30 text-sm transition-all">
+                دخول للمنصة
+            </button>
+        </form>
+    </div>
+
+    <script>
+    // إذا كان مسجلاً من قبل، انتقل لصفحة الهوم مباشرة
+    if (localStorage.getItem('kaada_auth') === 'true') {
+        window.location.replace('home.html');
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const pass = document.getElementById('passwordInput').value.trim();
+
+        // كلمة المرور المطلوبة بدقة
+        if (pass === 'kaada-25') {
+            localStorage.setItem('kaada_auth', 'true');
+            window.location.replace('home.html');
+        } else {
+            document.getElementById('errorMsg').classList.remove('hidden');
+            document.getElementById('passwordInput').value = '';
+        }
+    });
+</script>
+</body>
+</html>
