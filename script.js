@@ -12,6 +12,9 @@ const quizzesData = {
 
 function quizApp() {
     return {
+        // دمج نظام الإشعارات
+        ...createNotifier(),
+
         currentView: 'home',
         activeKey: 'aqeedah',
         timerSeconds: 30,
@@ -116,6 +119,7 @@ function quizApp() {
             this.userAnswers = new Array(this.currentQuestions.length).fill(null);
             this.currentView = 'quiz';
             this.loadQuestion();
+            this.showNotify('✨ تم إنشاء الاختبار المخصص بنجاح');
         },
 
         openAnalytics() {
@@ -127,8 +131,10 @@ function quizApp() {
             const index = this.bookmarks.findIndex(b => b.q === questionObj.q);
             if (index >= 0) {
                 this.bookmarks.splice(index, 1);
+                this.showNotify('🗑️ تم إزالة السؤال من بنك المفضلة');
             } else {
                 this.bookmarks.push(questionObj);
+                this.showNotify('⭐ تم حفظ السؤال في بنك المفضلة بنجاح');
             }
             localStorage.setItem('kaada_bookmarks', JSON.stringify(this.bookmarks));
         },
@@ -178,13 +184,14 @@ function quizApp() {
         startPomodoro() {
             if (this.pomoRunning) return;
             this.pomoRunning = true;
+            this.showNotify('🔥 بدأت جلسة التركيز (25 دقيقة)');
             this.pomoInterval = setInterval(() => {
                 if (this.pomoSeconds > 0) {
                     this.pomoSeconds--;
                 } else {
                     this.pomoRunning = false;
                     clearInterval(this.pomoInterval);
-                    alert(this.lang === 'ar' ? '🎉 انتهت جلسة التركيز! استرح قليلاً.' : 'Focus session completed!');
+                    this.showNotify('🎉 انتهت جلسة التركيز! استرح قليلاً.');
                 }
             }, 1000);
         },
@@ -192,11 +199,13 @@ function quizApp() {
         pausePomodoro() {
             this.pomoRunning = false;
             clearInterval(this.pomoInterval);
+            this.showNotify('⏸️ تم إيقاف المؤقت مؤقتاً', 'warning');
         },
 
         resetPomodoro() {
             this.pausePomodoro();
             this.pomoSeconds = 25 * 60;
+            this.showNotify('🔄 تم إعادة ضبط مؤقت التركيز');
         },
 
         formatPomodoroTime() {
@@ -275,6 +284,7 @@ function quizApp() {
             this.userAnswers = new Array(this.currentQuestions.length).fill(null);
             this.currentView = 'quiz';
             this.loadQuestion();
+            this.showNotify('🚀 تم بدء الاختبار بنجاح');
         },
 
         loadQuestion() {
@@ -337,6 +347,7 @@ function quizApp() {
             localStorage.setItem('kaada_score_sum', this.statsTotalScoreSum);
 
             this.currentView = 'results';
+            this.showNotify('🏁 انتهى الاختبار! تم رصد النتيجة بنجاح.');
         },
 
         getResultPercentage() {
@@ -379,6 +390,7 @@ function quizApp() {
             this.userAnswers = new Array(this.currentQuestions.length).fill(null);
             this.currentView = 'quiz';
             this.loadQuestion();
+            this.showNotify('🔄 بدء مراجعة وإعادة الأسئلة الخاطئة فقط');
         },
 
         restartCurrentQuiz() {

@@ -1,10 +1,10 @@
 {
-  "name": "منصة الدفاع الجوي الذكية",
+  "name": "منصة الاختبارات والمذاكرة الذكية - كلية الملك عبدالله للدفاع الجوي",
   "short_name": "KAADA Hub",
   "start_url": "./home.html",
   "display": "standalone",
-  "background_color": "#020617",
-  "theme_color": "#06b6d4",
+  "background_color": "#0c1410",
+  "theme_color": "#10b981",
   "icons": [
     {
       "src": "./KAADA-logo.png",
