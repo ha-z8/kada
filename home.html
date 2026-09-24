@@ -181,6 +181,27 @@
                     </div>
                 </div>
             </div>
+
+                    <!-- بطاقة الخريطة الإلكترونية لطلبة الكلية بتصميم خريطة خلفي هادئ -->
+<div onclick="window.location.href='map.html'" class="glass-card hover:border-emerald-500/60 p-5 md:p-6 rounded-3xl cursor-pointer transition-all duration-300 shadow-xl group flex flex-col justify-between hover:scale-[1.01] relative overflow-hidden bg-gradient-to-br from-emerald-950/50 via-slate-900/90 to-emerald-900/30 border border-emerald-600/40">
+    <!-- تصميم خريطة خلفي هندسي باهت ومخفي بشكل فخم -->
+    <div class="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:16px_16px]"></div>
+    <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+    
+    <div class="relative z-10">
+        <div class="flex justify-between items-start mb-3">
+            <span class="bg-emerald-600/10 text-emerald-400 border border-emerald-600/30 text-[11px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">GIS Portal</span>
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        </div>
+        <h3 class="text-base md:text-lg font-bold text-white group-hover:text-emerald-300 transition-colors" x-text="lang === 'ar' ? 'الخرائط الإلكترونية لطلبة الكلية' : 'Student Electronic Maps'">الخرائط الإلكترونية لطلبة الكلية</h3>
+        <p class="text-slate-400 text-xs mt-2 leading-relaxed" x-text="lang === 'ar' ? 'استعراض خريطة الأقمار الصناعية، مباني التعليم، والمرافق الحية مع محرك بحث فوري وتصميم هندسي دقيق.' : 'Explore satellite maps, barracks, and facilities with live search.'">استعراض خريطة الأقمار الصناعية ومواقع السرايا ومباني التعليم مع محرك بحث فوري.</p>
+    </div>
+    
+    <div class="mt-5 flex items-center justify-between pt-3 border-t border-emerald-900/40 text-xs text-emerald-400 font-bold group-hover:translate-x-1 transition-transform relative z-10">
+        <span x-text="lang === 'ar' ? 'فتح الخريطة التفاعلية &larr;' : 'Open Interactive Map &larr;'">فتح الخريطة التفاعلية &larr;</span>
+        <span class="text-lg">🗺️</span>
+    </div>
+</div>
         </div>
 
         <!-- 2. واجهة الاختبار النشط -->
@@ -604,32 +625,31 @@
     </main>
 
     <!-- الذيل (Footer) مع لوحة معلومات الإصدار وزر المزامنة المتناسق بهوية الموقع -->
-    <footer class="glass-card border-t border-emerald-900/50 mt-12 py-6 text-xs text-slate-400 z-10">
-        <div class="max-w-6xl mx-auto px-4 grid md:grid-cols-3 gap-4 items-center text-center" :class="lang === 'ar' ? 'md:text-right' : 'md:text-left'">
-            <div class="space-y-0.5">
-                <p class="font-bold text-slate-200 text-xs md:text-sm" x-text="lang === 'ar' ? 'كلية الملك عبدالله للدفاع الجوي' : 'King Abdullah Air Defense Academy'"></p>
-                <p class="text-slate-400 text-[11px]" x-text="lang === 'ar' ? 'قسم طلبة المتوسط - منصة الاختبارات والمذاكرة الذكية' : 'Intermediate Section - Smart Quiz & Study Hub'"></p>
-            </div>
-            <div class="space-y-0.5 text-center">
-                <p class="font-bold text-emerald-400 tracking-wide text-[11px]">
-                    <span x-text="lang === 'ar' ? 'إشراف: ' : 'Supervised by: '"></span>
-                    <span class="text-white font-black">هزاع الهزاع</span>
-                </p>
-                <p class="text-slate-400 text-[10px]" x-text="lang === 'ar' ? 'جميع الحقوق محفوظة © 2026' : 'All Rights Reserved © 2026'"></p>
-            </div>
-            <div class="flex flex-col items-center md:items-end gap-1.5">
-                <span class="bg-emerald-600/10 text-emerald-300 border border-emerald-600/30 px-2.5 py-1 rounded-xl font-mono text-[10px] flex items-center gap-1.5 shadow">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span x-text="lang === 'ar' ? 'آخر تحديث: 24 سبتمبر 2026 - V7.2' : 'Last Updated: Sep 24, 2026 - V7.2'">آخر تحديث: 24 سبتمبر 2026</span>
-                </span>
-                <!-- زر التحديث منسق كبطاقة زجاجية بهوية الموقع -->
-                <button @click="forceSyncUpdate()" class="px-3.5 py-1.5 rounded-xl bg-emerald-950/60 hover:bg-emerald-900 border border-emerald-600/40 text-emerald-300 text-[11px] font-bold transition-all shadow flex items-center gap-1.5">
-                    <svg class="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                    <span x-text="lang === 'ar' ? 'تحديث ومزامنة الأكواد' : 'Sync Latest Code'">تحديث ومزامنة الأكواد</span>
-                </button>
-            </div>
+    <!-- ذيل الصفحة (Footer) المنسق -->
+<footer class="glass-card border-t border-emerald-900/50 mt-12 py-6 text-xs text-slate-400 z-10">
+    <div class="max-w-6xl mx-auto px-4 grid md:grid-cols-3 gap-4 items-center text-center" :class="lang === 'ar' ? 'md:text-right' : 'md:text-left'">
+        <div class="space-y-0.5">
+            <p class="font-bold text-slate-200 text-xs md:text-sm" x-text="lang === 'ar' ? 'كلية الملك عبدالله للدفاع الجوي' : 'King Abdullah Air Defense Academy'"></p>
+            <p class="text-slate-400 text-[11px]" x-text="lang === 'ar' ? 'قسم طلبة المتوسط - منصة الاختبارات والمذاكرة الذكية' : 'Intermediate Section - Smart Quiz & Study Hub'"></p>
         </div>
-    </footer>
+        
+        <div class="space-y-0.5 text-center flex flex-col items-center justify-center">
+            <p class="font-bold text-emerald-400 tracking-wide text-[11px]">
+                <span x-text="lang === 'ar' ? 'إشراف: ' : 'Supervised by: '"></span>
+                <span class="text-white font-black">هزاع الهزاع</span>
+            </p>
+            <p class="text-slate-400 text-[10px]" x-text="lang === 'ar' ? 'جميع الحقوق محفوظة © 2026' : 'All Rights Reserved © 2026'"></p>
+            <span class="text-[10px] text-emerald-400/80 font-mono mt-1" x-text="lang === 'ar' ? 'آخر تحديث: 24 سبتمبر 2026 - V7.2' : 'Last Updated: Sep 24, 2026 - V7.2'">آخر تحديث: 24 سبتمبر 2026</span>
+        </div>
+
+        <div class="flex justify-center md:justify-end">
+            <button @click="forceSyncUpdate()" class="px-3.5 py-1.5 rounded-xl bg-emerald-950/60 hover:bg-emerald-900 border border-emerald-600/40 text-emerald-300 text-[11px] font-bold transition-all shadow flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                <span x-text="lang === 'ar' ? 'تحديث ومزامنة الأكواد' : 'Sync Latest Code'">تحديث ومزامنة الأكواد</span>
+            </button>
+        </div>
+    </div>
+</footer>
 
     <!-- ربط السكربتات بختم الإصدار وملف الإشعارات المستقل -->
     <script src="./notifications.js?v=2026.9.5"></script>

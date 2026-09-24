@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" x-data="{ lang: 'ar', toggleLang() { this.lang = this.lang === 'ar' ? 'en' : 'ar'; document.documentElement.setAttribute('dir', this.lang === 'ar' ? 'rtl' : 'ltr'); document.documentElement.setAttribute('lang', this.lang); updateMapLanguage(); } }">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title x-text="lang === 'ar' ? 'الخرائط الإلكترونية لطلبة الكلية | كلية الملك عبدالله للدفاع الجوي' : 'Student Electronic Maps | King Abdullah Air Defense Academy'">الخرائط الإلكترونية لطلبة الكلية</title>
+    <link href="./KAADA-logo.png" rel="icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- مكتبة Leaflet.js للخرائط التفاعلية -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="./style.css">
+    <link rel="manifest" href="./manifest.json">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        if (localStorage.getItem('kaada_auth') !== 'true') {
+            window.location.replace('index.html');
+        }
+    </script>
+    <style>
+        #map { width: 100%; height: 500px; min-height: 500px; border-radius: 1.5rem; z-index: 10; background: #0c1410; }
+        .leaflet-popup-content-wrapper { background: #0f1c14 !important; color: #fff !important; border: 1px solid #10b981; border-radius: 1rem; font-family: 'Cairo', 'Inter', sans-serif; }
+        .leaflet-popup-tip { background: #10b981 !important; }
+        .custom-tooltip { background: rgba(12, 20, 16, 0.95) !important; color: #34d399 !important; border: 1px solid rgba(16, 185, 129, 0.6) !important; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; font-family: 'Cairo', 'Inter', sans-serif; box-shadow: 0 4px 6px rgba(0,0,0,0.4); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-[#0c1410] text-slate-100 min-h-screen flex flex-col justify-between selection:bg-emerald-600 selection:text-white relative overflow-x-hidden">
+
+    <!-- خلفيات مضيئة هادئة -->
+    <div class="absolute top-0 -left-4 w-72 md:w-96 h-72 md:h-96 bg-emerald-800/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute bottom-10 -right-4 w-72 md:w-96 h-72 md:h-96 bg-emerald-900/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <!-- الشريط العلوي (الراس) -->
+    <header class="glass-card border-b border-emerald-900/40 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-3 md:px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-2.5 cursor-pointer" onclick="window.location.href='home.html'">
+                <div class="bg-gradient-to-tr from-emerald-700 to-emerald-900 p-2 rounded-xl md:rounded-2xl shadow-lg shadow-emerald-950/50 text-white">
+                    <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                </div>
+                <div>
+                    <h1 class="text-xs md:text-base font-black text-white" x-text="lang === 'ar' ? 'الخرائط الإلكترونية لطلبة الكلية' : 'Student Electronic Maps'">الخرائط الإلكترونية لطلبة الكلية</h1>
+                    <p class="text-[10px] md:text-xs text-slate-400" x-text="lang === 'ar' ? 'كلية الملك عبدالله للدفاع الجوي' : 'King Abdullah Air Defense Academy'">كلية الملك عبدالله للدفاع الجوي</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button onclick="window.location.href='home.html'" class="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-emerald-900/60 text-xs font-semibold text-emerald-300 transition-all shadow flex items-center gap-1.5">
+                    &larr; <span x-text="lang === 'ar' ? 'الرئيسية' : 'Home'">الرئيسية</span>
+                </button>
+                <button @click="toggleLang()" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-emerald-900/60 text-xs font-semibold text-emerald-300 transition-all shadow">
+                    <span x-text="lang === 'ar' ? 'EN' : 'AR'">EN</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="max-w-7xl w-full mx-auto px-3 md:px-4 py-6 md:py-8 flex-grow flex flex-col justify-center z-10">
+        <div class="glass-card p-5 md:p-8 rounded-3xl shadow-2xl space-y-6">
+            
+            <div class="flex flex-wrap justify-between items-center gap-3 border-b border-emerald-900/40 pb-4">
+                <div>
+                    <span class="bg-emerald-600/10 text-emerald-400 border border-emerald-600/30 text-[11px] md:text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider inline-block">GIS Portal</span>
+                    <h2 class="text-xl md:text-3xl font-black text-white tracking-tight mt-1" x-text="lang === 'ar' ? 'الخرائط الإلكترونية لطلبة الكلية' : 'Student Electronic Maps'">الخرائط الإلكترونية لطلبة الكلية</h2>
+                </div>
+                <!-- شريط البحث -->
+                <div class="w-full sm:w-72">
+                    <input type="text" id="search-input" oninput="filterFacilityList()" :placeholder="lang === 'ar' ? 'بحث بالاسم أو معرف النظام (ID)...' : 'Search by name or ID...'" class="w-full bg-slate-900 border border-emerald-900/60 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 shadow-inner">
+                </div>
+            </div>
+
+            <!-- شبكة الخريطة، قائمة المعالم، ولوحة المعلومات -->
+            <div class="grid lg:grid-cols-4 gap-6 items-start">
+                
+                <!-- قائمة المعالم الجانبية المترجمة مع فلاتر الألوان -->
+                <div class="glass-card p-4 rounded-2xl border border-emerald-500/40 space-y-3 bg-emerald-950/20 lg:col-span-1">
+                    <div class="border-b border-emerald-900/40 pb-2 space-y-2">
+                        <h4 class="text-xs font-bold text-white flex items-center justify-between">
+                            <span x-text="lang === 'ar' ? '📋 قائمة المعالم' : '📋 Facilities List'">📋 قائمة المعالم</span>
+                            <span id="facilities-count" class="text-[10px] text-emerald-400 font-mono">27 موقعاً</span>
+                        </h4>
+                        <!-- أزرار فلترة الألوان -->
+                        <div class="flex items-center gap-1.5 pt-1 overflow-x-auto no-scrollbar">
+                            <button onclick="filterByColor('all')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[10px] text-slate-200 border border-emerald-900/50" x-text="lang === 'ar' ? 'الكل' : 'All'">الكل</button>
+                            <button onclick="filterByColor('#005e38')" class="w-4 h-4 rounded-full bg-[#005e38] border border-white/20" title="Education"></button>
+                            <button onclick="filterByColor('#1b8893')" class="w-4 h-4 rounded-full bg-[#1b8893] border border-white/20" title="Barracks"></button>
+                            <button onclick="filterByColor('#cc1b15')" class="w-4 h-4 rounded-full bg-[#cc1b15] border border-white/20" title="Fields/Store"></button>
+                            <button onclick="filterByColor('#ffcc00')" class="w-4 h-4 rounded-full bg-[#ffcc00] border border-white/20" title="Services"></button>
+                        </div>
+                    </div>
+                    <div id="facilities-list" class="space-y-1.5 max-h-[380px] overflow-y-auto pr-1 no-scrollbar">
+                        <!-- العناصر تتعبى ديناميكياً -->
+                    </div>
+                </div>
+
+                <!-- حاوية الخريطة التقنية الحية -->
+                <div class="lg:col-span-2 bg-slate-900/90 border border-emerald-900/60 p-3 rounded-3xl shadow-inner relative">
+                    <div id="map"></div>
+                    <div class="absolute top-6 right-6 z-20 flex flex-col gap-2">
+                        <button onclick="resetMapView()" class="p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-emerald-500/40 text-emerald-300 text-xs shadow-lg transition-all" :title="lang === 'ar' ? 'إعادة ضبط الرؤية' : 'Reset View'">
+                            📍
+                        </button>
+                    </div>
+                </div>
+
+                <!-- لوحة المعلومات الجانبية -->
+                <div class="glass-card p-5 rounded-2xl border border-emerald-500/40 space-y-4 bg-emerald-950/20 lg:col-span-1">
+                    <div class="border-b border-emerald-900/40 pb-3 flex justify-between items-center">
+                        <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <span x-text="lang === 'ar' ? 'معلومات المعلم المختار' : 'Selected Facility Info'">معلومات المعلم المختار</span>
+                        </h4>
+                    </div>
+
+                    <div class="space-y-3.5 pt-1">
+                        <div class="bg-slate-900/95 border border-emerald-900/60 p-4 rounded-xl space-y-2 shadow">
+                            <span class="text-[10px] text-slate-400 font-mono" x-text="lang === 'ar' ? 'اسم الموقع:' : 'Location Name:'">اسم الموقع:</span>
+                            <h5 id="selected-title" class="text-base font-black text-emerald-300" x-text="lang === 'ar' ? 'اختر معلماً من القائمة أو الخريطة' : 'Select a facility from list or map'">اختر معلماً من القائمة أو الخريطة</h5>
+                            <p id="selected-id" class="text-xs text-slate-300 font-mono" x-text="lang === 'ar' ? 'معرف النظام: ---' : 'System ID: ---'">معرف النظام: ---</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- الذيل (Footer) -->
+    <!-- ذيل الصفحة (Footer) مطابق تماماً لـ home.html -->
+<footer class="glass-card border-t border-emerald-900/50 mt-12 py-6 text-xs text-slate-400 z-10">
+    <div class="max-w-6xl mx-auto px-4 grid md:grid-cols-3 gap-4 items-center text-center" :class="lang === 'ar' ? 'md:text-right' : 'md:text-left'">
+        <div class="space-y-0.5">
+            <p class="font-bold text-slate-200 text-xs md:text-sm" x-text="lang === 'ar' ? 'كلية الملك عبدالله للدفاع الجوي' : 'King Abdullah Air Defense Academy'"></p>
+            <p class="text-slate-400 text-[11px]" x-text="lang === 'ar' ? 'قسم طلبة المتوسط - منصة الاختبارات والمذاكرة الذكية' : 'Intermediate Section - Smart Quiz & Study Hub'"></p>
+        </div>
+        
+        <div class="space-y-0.5 text-center flex flex-col items-center justify-center">
+            <p class="font-bold text-emerald-400 tracking-wide text-[11px]">
+                <span x-text="lang === 'ar' ? 'إشراف: ' : 'Supervised by: '"></span>
+                <span class="text-white font-black">هزاع الهزاع</span>
+            </p>
+            <p class="text-slate-400 text-[10px]" x-text="lang === 'ar' ? 'جميع الحقوق محفوظة © 2026' : 'All Rights Reserved © 2026'"></p>
+            <span class="text-[10px] text-emerald-400/80 font-mono mt-1" x-text="lang === 'ar' ? 'آخر تحديث: 24 سبتمبر 2026 - V7.2' : 'Last Updated: Sep 24, 2026 - V7.2'">آخر تحديث: 24 سبتمبر 2026</span>
+        </div>
+
+        <div class="flex justify-center md:justify-end">
+            <button onclick="forceSyncUpdate()" class="px-3.5 py-1.5 rounded-xl bg-emerald-950/60 hover:bg-emerald-900 border border-emerald-600/40 text-emerald-300 text-[11px] font-bold transition-all shadow flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                <span x-text="lang === 'ar' ? 'تحديث ومزامنة الأكواد' : 'Sync Latest Code'">تحديث ومزامنة الأكواد</span>
+            </button>
+        </div>
+    </div>
+</footer>
+
+    <!-- سكربت التشغيل والمعالم مع دعم اللغتين -->
+    <script>
+        const facilityData = {
+            "type": "FeatureCollection",
+            "features": [
+                { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[40.575872, 21.497864], [40.575496, 21.497886], [40.575472, 21.497621], [40.575793, 21.497559], [40.575872, 21.497864]]] }, "properties": { "title_ar": "المسجد", "title_en": "Mosque", "fill": "#ffffff" }, "id": 1478007007 },
+                { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[40.574321, 21.497418], [40.574945, 21.497847], [40.574485, 21.498411], [40.573836, 21.497993], [40.574321, 21.497418]]] }, "properties": { "title_ar": "مطعم الطلاب (الميز)", "title_en": "Student Mess", "fill": "#ffcc00" }, "id": 4268850175 },
+                { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[40.574109, 21.498614], [40.573939, 21.498811], [40.573327, 21.498405], [40.573491, 21.498174], [40.574109, 21.498614]]] }, "properties": { "title_ar": "قيادة الكتيبة", "title_en": "Battalion HQ", "fill": "#444444" }, "id": 178640843 },
+                { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[40.574788, 21.497475], [40.574994, 21.497204], [40.575297, 21.497396], [40.575066, 21.497678], [40.574788, 21.497475]]] }, "properties": { "title_ar": "المكتبة", "title_en": "Library", "fill": "#005e38" }, "id": 1360526840 },
+                { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[40.574897, 21.497328], [40.574666, 21.49717], [40.574909, 21.49686], [40.574965, 21.496904], [40.575, 21.496862], [40.575319, 21.49709], [40.575145, 21.497297], [40.574996, 21.497201], [40.574897, 21.497328]]] }, "properties": { "title_ar": "نادي الطلاب", "title_en": "Student Club", "fill": "#ffcc00" }, "id": 1811485208 },
+                { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[40.573697, 21.496769], [40.574112, 21.496303], [40.574779, 21.496851], [40.574417, 21.497276], [40.573697, 21.496769]]] }, "properties": { "title_ar": "سرية عثمان بن عفان", "title_en": "Uthman Bin Affan Barracks", "fill": "#1b8893" }, "id": 2217422321 },
+                { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[40.573624, 21.497524], [40.573935, 21.497129], [40.574249, 21.497356], [40.573927, 21.497738], [40.573624, 21.497524]]] }, "properties": { "title_ar": "سرية عمر بن الخطاب", "title_en": "Umar Bin Al-Khattab Barracks", "fill": "#1b8893" }, "id": 36177619 },
+                { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[40.573893, 21.497113], [40.573552, 21.497611], [40.573234, 21.497409], [40.573547, 21.49692], [40.573893, 21.497113]]] }, "properties": { "title_ar": "سرية ابو بكر الصديق (فرع)", "title_en": "Abu Bakr Al-Siddiq Barracks (Branch)", "fill": "#1b8893" }, "id": 878426622 },
+                { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[40.572851, 21.4972], [40.573233, 21.497458], [40.572838, 21.497906], [40.572481, 21.497642], [40.572851, 21.4972]]] }, "properties": { "title_ar": "سرية ابو بكر الصديق", "title_en": "Abu Bakr Al-Siddiq Barracks", "fill": "#1b8893" }, "id": 1794723580 },
+                { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[40.572449, 21.498073], [40.572672, 21.498215], [40.572643, 21.498257], [40.572664, 21.498273], [40.572623, 21.49832], [40.57266, 21.498348], [40.572613, 21.498403], [40.572566, 21.498449], [40.572235, 21.498231], [40.572267, 21.498178], [40.572306, 21.498136], [40.572342, 21.498155], [40.572381, 21.498097], [40.572416, 21.498112], [40.572449, 21.498073]]] }, "properties": { "title_ar": "مستودع السلاح والتموين", "title_en": "Arms & Supply Warehouse", "fill": "#cc1b15" }, "id": 1582280732 },
+                { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[40.573687, 21.500516], [40.573422, 21.500535], [40.573405, 21.500446], [40.573124, 21.500486], [40.573074, 21.500166], [40.573288, 21.500146], [40.57325, 21.499947], [40.573348, 21.499927], [40.573594, 21.499904], [40.573615, 21.500042], [40.573768, 21.500153], [40.573777, 21.500228], [40.573723, 21.500326], [40.573665, 21.500362], [40.573687, 21.500516]]] }, "properties": { "title_ar": "مقر الاختبارات", "title_en": "Exams Headquarters", "fill": "#005e38" }, "id": 1726704660 },
+                { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[40.573148, 21.499982], [40.5729, 21.499798], [40.573064, 21.499609], [40.573132, 21.499649], [40.573075, 21.499569], [40.573101, 21.499534], [40.57296, 21.499441], [40.573013, 21.499378], [40.573056, 21.499414], [40.57318, 21.499261], [40.573122, 21.499223], [40.573098, 21.499259], [40.572817, 21.499006], [40.572979, 21.498817], [40.573554, 21.499236], [40.573599, 21.499425], [40.573148, 21.499982]]] }, "properties": { "title_ar": "مبنى تعليم المتوسط", "title_en": "Intermediate Education Building", "fill": "#005e38" }, "id": 242311433 },
+                { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[40.572862, 21.499361], [40.572869, 21.499594], [40.572416, 21.499583], [40.572435, 21.499345], [40.572862, 21.499361]]] }, "properties": { "title_ar": "مبنى الدمج", "title_en": "Integration Building", "fill": "#005e38" }, "id": 933804173 },
+                { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[40.57284, 21.498795], [40.572578, 21.499123], [40.572361, 21.498973], [40.57263, 21.498653], [40.57284, 21.498795]]] }, "properties": { "title_ar": "مبنى تعليم الاعدادي", "title_en": "Preparatory Education Building", "fill": "#005e38" }, "id": 3851937780 },
+                { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[40.573002, 21.501568], [40.572496, 21.502203], [40.572174, 21.501839], [40.572229, 21.501601], [40.572384, 21.501397], [40.572601, 21.501202], [40.573002, 21.501568]]] }, "properties": { "title_ar": "مبنى تعليم النهائي", "title_en": "Final Education Building", "fill": "#005e38" }, "id": 2403691102 },
+                { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[40.573244, 21.497451], [40.573771, 21.497833], [40.573321, 21.498378], [40.572791, 21.497996], [40.573244, 21.497451]]] }, "properties": { "title_ar": "الميدان القديم", "title_en": "Old Parade Ground", "fill": "#cc1b15" }, "id": 2833158260 },
+                { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[40.572926, 21.498104], [40.573911, 21.498806], [40.573561, 21.49922], [40.572568, 21.498543], [40.572926, 21.498104]]] }, "properties": { "title_ar": "ميدان الجديد", "title_en": "New Parade Ground", "fill": "#cc1b15" }, "id": 3828018760 },
+                { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[40.573705, 21.502655], [40.573741, 21.501327], [40.575045, 21.50136], [40.574994, 21.502703], [40.573705, 21.502655]]] }, "properties": { "title_ar": "الميدان الخماسي", "title_en": "Pentathlon Ground", "fill": "#cc1b15" }, "id": 2798153446 },
+                { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[40.573721, 21.505489], [40.572635, 21.504025], [40.573792, 21.503435], [40.574791, 21.504998], [40.573721, 21.505489]]] }, "properties": { "title_ar": "الاستاد الرياضي", "title_en": "Sports Stadium", "fill": "#3cc954" }, "id": 2092202725 },
+                { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[40.577145, 21.496398], [40.575867, 21.49545], [40.576773, 21.494273], [40.578146, 21.495225], [40.577145, 21.496398]]] }, "properties": { "title_ar": "ميدان العرض العسكري", "title_en": "Military Parade Square", "fill": "#cc1b15" }, "id": 281590306 },
+                { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[40.577939, 21.494725], [40.57746, 21.494416], [40.578038, 21.493721], [40.578526, 21.494095], [40.577939, 21.494725]]] }, "properties": { "title_ar": "الثقافة", "title_en": "Cultural Center", "fill": "#005e38" }, "id": 2440854184 },
+                { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[40.580331, 21.497551], [40.57963, 21.496342], [40.580404, 21.495861], [40.581184, 21.497116], [40.580331, 21.497551]]] }, "properties": { "title_ar": "المواقف الترابيه", "title_en": "Dirt Parking", "fill": "#444444" }, "id": 2662085898 },
+                { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[40.579652, 21.496309], [40.578923, 21.495127], [40.579638, 21.494584], [40.580426, 21.495813], [40.579652, 21.496309]]] }, "properties": { "title_ar": "المواقف", "title_en": "Parking", "fill": "#444444" }, "id": 2546672364 },
+                { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[40.578905, 21.494337], [40.579046, 21.494453], [40.578993, 21.494517], [40.57908, 21.494594], [40.578933, 21.494822], [40.578659, 21.494632], [40.578905, 21.494337]]] }, "properties": { "title_ar": "بوابة الكلية", "title_en": "Academy Gate", "fill": "#444444" }, "id": 2569673305 },
+                { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[40.575194, 21.495985], [40.57451, 21.49561], [40.575543, 21.494344], [40.576155, 21.494795], [40.575194, 21.495985]]] }, "properties": { "title_ar": "الملعب الرياضي", "title_en": "Sports Field", "fill": "#3cc954" }, "id": 792574375 },
+                { "type": "Feature", "geometry": { "coordinates": [[[40.574094, 21.497999], [40.57422, 21.497837], [40.574131, 21.497776], [40.573994, 21.497935], [40.574094, 21.497999]]], "type": "Polygon" }, "properties": { "title_ar": "مكتب ضابط خفر", "title_en": "Duty Officer Office", "fill": "#005e38" }, "id": 3802040487 }
+            ]
+        };
+
+        let mapInstance = null;
+        let geoJsonLayer = null;
+        let featureLayers = {};
+        let activeColorFilter = 'all';
+
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                if (document.getElementById('map')) {
+                    mapInstance = L.map('map').setView([21.497, 40.575], 16);
+
+                    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                        maxZoom: 19,
+                        attribution: 'GIS &copy; Esri'
+                    }).addTo(mapInstance);
+
+                    buildMapLayers();
+                    renderFacilityList(facilityData.features);
+                }
+            }, 200);
+        });
+
+        function buildMapLayers() {
+            if (geoJsonLayer) {
+                mapInstance.removeLayer(geoJsonLayer);
+            }
+
+            const currentLang = document.documentElement.getAttribute('lang') || 'ar';
+
+            geoJsonLayer = L.geoJSON(facilityData, {
+                style: function (feature) {
+                    return {
+                        color: feature.properties.fill || '#10b981',
+                        weight: 2,
+                        fillColor: feature.properties.fill || '#10b981',
+                        fillOpacity: 0.65
+                    };
+                },
+                onEachFeature: function (feature, layer) {
+                    if (feature.properties) {
+                        featureLayers[feature.id] = layer;
+                        const title = currentLang === 'ar' ? feature.properties.title_ar : feature.properties.title_en;
+
+                        layer.bindTooltip(title, {
+                            permanent: true,
+                            direction: 'center',
+                            className: 'custom-tooltip'
+                        });
+
+                        layer.on('click', function () {
+                            selectFeatureOnMap(feature.id, title);
+                        });
+                    }
+                }
+            }).addTo(mapInstance);
+
+            try {
+                mapInstance.fitBounds(geoJsonLayer.getBounds());
+            } catch(e) {}
+            mapInstance.invalidateSize();
+        }
+
+        function updateMapLanguage() {
+            buildMapLayers();
+            filterFacilityList();
+            
+            const currentLang = document.documentElement.getAttribute('lang') || 'ar';
+            const selectedTitleElem = document.getElementById('selected-title');
+            if (selectedTitleElem.innerText.includes('اختر') || selectedTitleElem.innerText.includes('Select')) {
+                selectedTitleElem.innerText = currentLang === 'ar' ? 'اختر معلماً من القائمة أو الخريطة' : 'Select a facility from list or map';
+            }
+        }
+
+        function renderFacilityList(features) {
+            const listContainer = document.getElementById('facilities-list');
+            listContainer.innerHTML = '';
+            const currentLang = document.documentElement.getAttribute('lang') || 'ar';
+            
+            features.forEach(feat => {
+                const title = currentLang === 'ar' ? feat.properties.title_ar : feat.properties.title_en;
+                const id = feat.id.toString();
+                const color = feat.properties.fill || '#10b981';
+
+                const btn = document.createElement('button');
+                btn.className = "w-full text-right p-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-emerald-900/40 text-xs font-semibold text-slate-300 transition-all flex items-center justify-between group";
+                btn.innerHTML = `
+                    <span class="group-hover:text-emerald-300 truncate">${title} <span class="text-[9px] text-slate-500 font-mono">(#${id})</span></span>
+                    <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${color}"></span>
+                `;
+                btn.onclick = () => selectFeatureOnMap(id, title);
+                listContainer.appendChild(btn);
+            });
+
+            document.getElementById('facilities-count').innerText = features.length + (currentLang === 'ar' ? ' موقعاً' : ' locations');
+        }
+
+        function selectFeatureOnMap(id, title) {
+            const currentLang = document.documentElement.getAttribute('lang') || 'ar';
+            document.getElementById('selected-title').innerText = title;
+            document.getElementById('selected-id').innerText = (currentLang === 'ar' ? "معرف النظام (ID): " : "System ID: ") + id;
+
+            const layer = featureLayers[id];
+            if (layer && mapInstance) {
+                if (layer.getBounds) {
+                    mapInstance.fitBounds(layer.getBounds(), { maxZoom: 18 });
+                } else if (layer.getLatLng) {
+                    mapInstance.setView(layer.getLatLng(), 18);
+                }
+                layer.openPopup ? layer.openPopup() : layer.fire('click');
+            }
+        }
+
+        function filterFacilityList() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const currentLang = document.documentElement.getAttribute('lang') || 'ar';
+            
+            const filtered = facilityData.features.filter(f => {
+                const name = currentLang === 'ar' ? f.properties.title_ar.toLowerCase() : f.properties.title_en.toLowerCase();
+                const matchQuery = name.includes(query) || f.id.toString().includes(query);
+                const matchColor = activeColorFilter === 'all' || f.properties.fill === activeColorFilter;
+                return matchQuery && matchColor;
+            });
+            renderFacilityList(filtered);
+        }
+
+        function filterByColor(colorHex) {
+            activeColorFilter = colorHex;
+            filterFacilityList();
+        }
+
+        function resetMapView() {
+            if (mapInstance && geoJsonLayer) {
+                mapInstance.fitBounds(geoJsonLayer.getBounds());
+            }
+        }
+
+        function forceSyncUpdate() {
+            const currentLang = document.documentElement.getAttribute('lang') || 'ar';
+            if (navigator.serviceWorker) {
+                navigator.serviceWorker.getRegistrations().then((registrations) => {
+                    for (let registration of registrations) {
+                        registration.unregister();
+                    }
+                    caches.keys().then((names) => {
+                        for (let name of names) {
+                            caches.delete(name);
+                        }
+                        alert(currentLang === 'ar' ? '✨ تم مسح الذاكرة المؤقتة ومزامنة أحدث إصدار بنجاح!' : '✨ Cache cleared and latest version synced successfully!');
+                        window.location.reload(true);
+                    });
+                });
+            } else {
+                window.location.reload(true);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,9 +1,10 @@
-// sw.js - تخزين ذكي مع التحديث الفوري للأكواد الجديدة
-const CACHE_NAME = 'kaada-quiz-v8.0';
+// sw.js - تخزين ذكي مع التحديث الفوري للأكواد الجديدة ودعم الخرائط
+const CACHE_NAME = 'kaada-quiz-v8.1';
 const assetsToCache = [
     './',
     './index.html',
     './home.html',
+    './map.html',
     './style.css',
     './aqeedah.js',
     './chemistry.js',
@@ -13,6 +14,9 @@ const assetsToCache = [
     './KAADA-logo.png',
     'https://cdn.tailwindcss.com',
     'https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js',
+    'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+    'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/',
     'https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Inter:wght@400;500;600;700;800&display=swap'
 ];
 

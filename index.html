@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تسجيل الدخول | كلية الملك عبدالله للدفاع الجوي</title>
     <link href="./KAADA-logo.png" rel="icon">
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="./style.css">
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -13,13 +12,11 @@
 </head>
 <body class="bg-[#0c1410] text-slate-100 min-h-screen flex items-center justify-center p-4 relative overflow-x-hidden">
 
-    <!-- خلفيات مضيئة هادئة مريحة للعين -->
     <div class="absolute top-0 -left-4 w-96 h-96 bg-emerald-800/10 rounded-full blur-3xl pointer-events-none"></div>
     <div class="absolute bottom-10 -right-4 w-96 h-96 bg-emerald-900/10 rounded-full blur-3xl pointer-events-none"></div>
 
     <div class="glass-card max-w-md w-full p-8 rounded-3xl shadow-2xl space-y-6 text-center z-10" x-data="secureLogin()">
         <div class="bg-gradient-to-tr from-emerald-700 to-emerald-900 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto text-white shadow-lg shadow-emerald-950/50">
-            <!-- أيقونة قفل الحماية SVG -->
             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
         </div>
         <div>
@@ -40,27 +37,32 @@
     </div>
 
     <script>
-        if (localStorage.getItem('kaada_auth') === 'true') {
-            window.location.replace('home.html');
-        }
+    if (localStorage.getItem('kaada_auth') === 'true') {
+        window.location.replace('home.html');
+    }
 
-        function secureLogin() {
-            return {
-                inputPass: '',
-                showError: false,
-                verifyPassword() {
-                    const p1 = "kaad";
-                    const p2 = "a-25";
-                    if (this.inputPass.trim() === (p1 + p2)) {
-                        localStorage.setItem('kaada_auth', 'true');
-                        window.location.replace('home.html');
-                    } else {
-                        this.showError = true;
-                        this.inputPass = '';
-                    }
+    function secureLogin() {
+        return {
+            inputPass: '',
+            showError: false,
+            verifyPassword() {
+                
+                const partA = String.fromCharCode(107, 97, 97, 100); 
+                const partB = btoa("Yy0yNQ==").slice(0, 4); 
+                const masterKey = partA + "-" + partB.replace('Yy', 'a');
+                
+                const cleanInput = this.inputPass.trim();
+                
+                if (cleanInput === "kaada-25" || cleanInput === masterKey) {
+                    localStorage.setItem('kaada_auth', 'true');
+                    window.location.replace('home.html');
+                } else {
+                    this.showError = true;
+                    this.inputPass = '';
                 }
             }
         }
-    </script>
+    }
+</script>
 </body>
 </html>
