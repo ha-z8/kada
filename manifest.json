@@ -1,15 +1,69 @@
 {
-  "name": "منصة الاختبارات والمذاكرة الذكية - كلية الملك عبدالله للدفاع الجوي",
-  "short_name": "KAADA Hub",
-  "start_url": "./home.html",
-  "display": "standalone",
+  "name": "KAADA",
+  "short_name": "KAADA App",
+  "start_url": "./index.html",
+  "display": "fullscreen",
   "background_color": "#0c1410",
   "theme_color": "#10b981",
   "icons": [
     {
-      "src": "./KAADA-logo.png",
-      "sizes": "192x192",
+      "src": "./KAADA-logo-512.png",
+      "sizes": "512x512",
       "type": "image/png"
     }
-  ]
+  ],
+  "id": "KAADA-App",
+  "description": "منصة الاختبارات والمذاكرة الذكية\nكلية الملك عبدالله للدفاع الجوي",
+  "dir": "auto",
+  "scope": "KAADA",
+  "lang": "ar",
+  "orientation": "any",
+  "display_override": [
+    "browser",
+    "fullscreen",
+    "minimal-ui",
+    "standalone",
+    "window-controls-overlay"
+  ],
+  "iarc_rating_id": "KAADA-App",
+  "prefer_related_applications": true,
+  "related_applications": [
+    {
+      "platform": "windows",
+      "url": "https://kaada-q.netlify.app/",
+      "id": "KAADA-App"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "KAADA App",
+      "url": "kaada-q.netlify.app",
+      "description": "KAADA"
+    }
+  ],
+  "categories": [
+    "books",
+    "education"
+  ],
+  "edge_side_panel": {
+    "preferred_width": 1
+  },
+  "share_target": {
+    "method": "GET",
+    "action": "https://kaada-q.netlify.app/",
+    "params": {
+      "title": "KAADA",
+      "text": "KAADA",
+      "url": "https://kaada-q.netlify.app/",
+      "files": [
+        {
+          "name": "KAADA-logo",
+          "accept": [
+            ".png",
+            ".ico"
+          ]
+        }
+      ]
+    }
+  }
 }
