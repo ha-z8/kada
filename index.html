@@ -1,67 +1,115 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" x-data="{ lang: 'ar', toggleLang() { this.lang = this.lang === 'ar' ? 'en' : 'ar'; document.documentElement.setAttribute('dir', this.lang === 'ar' ? 'rtl' : 'ltr'); document.documentElement.setAttribute('lang', this.lang); } }">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الدخول | كلية الملك عبدالله للدفاع الجوي</title>
+    <title x-text="lang === 'ar' ? 'تسجيل الدخول | منصة الاختبارات والمذاكرة الذكية' : 'Login | Smart Quiz & Study Hub'">تسجيل الدخول - منصة الاختبارات والمذاكرة الذكية</title>
     <link href="./KAADA-logo.png" rel="icon">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="./style.css">
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="manifest" href="./manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-</head>
-<body class="bg-[#0c1410] text-slate-100 min-h-screen flex items-center justify-center p-4 relative overflow-x-hidden">
-
-    <div class="absolute top-0 -left-4 w-96 h-96 bg-emerald-800/10 rounded-full blur-3xl pointer-events-none"></div>
-    <div class="absolute bottom-10 -right-4 w-96 h-96 bg-emerald-900/10 rounded-full blur-3xl pointer-events-none"></div>
-
-    <div class="glass-card max-w-md w-full p-8 rounded-3xl shadow-2xl space-y-6 text-center z-10" x-data="secureLogin()">
-        <div class="bg-gradient-to-tr from-emerald-700 to-emerald-900 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto text-white shadow-lg shadow-emerald-950/50">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-        </div>
-        <div>
-            <h2 class="text-xl font-black text-white">بوابة الدخول المحمية</h2>
-            <p class="text-xs text-slate-400 mt-1">كلية الملك عبدالله للدفاع الجوي - قسم المتوسط</p>
-        </div>
-
-        <form @submit.prevent="verifyPassword" class="space-y-4">
-            <input type="password" x-model="inputPass" placeholder="أدخل كلمة المرور..." required
-                class="w-full bg-[#0f1c14] border border-emerald-900/60 rounded-xl px-4 py-3 text-sm text-center text-white focus:outline-none focus:border-emerald-500 shadow-inner">
-            
-            <p x-show="showError" class="text-xs text-red-400 font-semibold">كلمة المرور غير صحيحة، حاول مرة أخرى.</p>
-
-            <button type="submit" class="w-full py-3 bg-gradient-to-r from-emerald-700 to-emerald-900 hover:from-emerald-600 hover:to-emerald-800 text-white font-bold rounded-xl shadow-lg shadow-emerald-950/50 text-sm transition-all">
-                دخول للمنصة
-            </button>
-        </form>
-    </div>
-
+    <style>
+        body { font-family: 'Cairo', 'Inter', sans-serif; }
+        .glass-card {
+            background: rgba(15, 28, 20, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+    </style>
     <script>
-    if (localStorage.getItem('kaada_auth') === 'true') {
-        window.location.replace('home.html');
-    }
+        // التحقق مما إذا كان المستخدم مسجل الدخول مسبقاً
+        if (localStorage.getItem('kaada_auth') === 'true') {
+            window.location.replace('home.html');
+        }
 
-    function secureLogin() {
-        return {
-            inputPass: '',
-            showError: false,
-            verifyPassword() {
+        // نظام تسجيل الدخول الآمن والمخفي
+        function secureHiddenLogin() {
+            return {
+                inputPass: '',
+                showError: false,
                 
-                const partA = String.fromCharCode(107, 97, 97, 100); 
-                const partB = btoa("Yy0yNQ==").slice(0, 4); 
-                const masterKey = partA + "-" + partB.replace('Yy', 'a');
-                
-                const cleanInput = this.inputPass.trim();
-                
-                if (cleanInput === "kaada-25" || cleanInput === masterKey) {
-                    localStorage.setItem('kaada_auth', 'true');
-                    window.location.replace('home.html');
-                } else {
-                    this.showError = true;
-                    this.inputPass = '';
+                verifyAccess() {
+                    // الشفرة السرية (Base64) الخاصة بكلمة المرور: KAADA-c25
+                    const encodedSecret = "S0FBREEtYzI1"; 
+                    
+                    const userEncoded = btoa(this.inputPass.trim());
+                    
+                    if (userEncoded === encodedSecret) {
+                        localStorage.setItem('kaada_auth', 'true');
+                        window.location.replace('home.html');
+                    } else {
+                        this.showError = true;
+                        this.inputPass = '';
+                    }
                 }
             }
         }
+    </script>
+</head>
+<body class="bg-[#0c1410] text-slate-100 min-h-screen flex flex-col justify-between selection:bg-emerald-600 selection:text-white relative overflow-x-hidden">
+
+    <!-- خلفيات مضيئة هادئة مريحة للعين -->
+    <div class="absolute top-0 -left-4 w-72 md:w-96 h-72 md:h-96 bg-emerald-800/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute bottom-10 -right-4 w-72 md:w-96 h-72 md:h-96 bg-emerald-900/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <!-- زر تغيير اللغة العائم في الأعلى -->
+
+    <!-- المحتوى الرئيسي لتسجيل الدخول -->
+    <main class="max-w-md w-full mx-auto px-4 py-12 flex-grow flex flex-col justify-center z-10" x-data="secureHiddenLogin()">
+        <div class="glass-card p-8 rounded-3xl shadow-2xl space-y-6 border border-emerald-500/30 text-center relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-600/10 rounded-full blur-2xl pointer-events-none"></div>
+            
+            <div class="w-20 h-20 bg-emerald-600/10 border border-emerald-500/40 rounded-2xl mx-auto flex items-center justify-center text-3xl shadow-lg text-emerald-400 font-bold">
+                🔒
+            </div>
+
+            <div class="space-y-2">
+                <span class="bg-emerald-600/10 text-emerald-400 border border-emerald-600/30 text-xs px-3 py-1 rounded-full font-bold inline-block">
+                    <span x-text="lang === 'ar' ? 'بوابة أمنة وخاصة' : 'Secure Portal'">بوابة آمنة وخاصة</span>
+                </span>
+                <h2 class="text-xl md:text-2xl font-black text-white" x-text="lang === 'ar' ? 'تسجيل دخول الطلبة' : 'Student Login'">تسجيل دخول الطلبة</h2>
+                <p class="text-slate-400 text-xs leading-relaxed" x-text="lang === 'ar' ? 'الرجاء إدخال رمز المرور المعتمد للوصول إلى محتوى المنصة واختبارات المواد.' : 'Please enter authorized password to access.'">أدخل رمز المرور المعتمد للوصول.</p>
+            </div>
+
+            <form @submit.prevent="verifyAccess()" class="space-y-4 pt-2">
+                <div>
+                    <input type="password" 
+                           x-model="inputPass" 
+                           :placeholder="lang === 'ar' ? 'أدخل رمز المرور السرّي...' : 'Enter password...'"
+                           class="w-full bg-slate-900 border border-emerald-900/60 rounded-xl px-4 py-3 text-xs md:text-sm text-white focus:outline-none focus:border-emerald-500 text-center tracking-widest shadow-inner">
+                </div>
+
+                <div x-show="showError" x-transition class="text-red-400 text-xs font-bold bg-red-950/40 border border-red-500/30 p-2.5 rounded-xl">
+                    <span x-text="lang === 'ar' ? '⚠️ رمز المرور غير صحيح، حاول مجدداً.' : '⚠️ Incorrect password, try again.'">رمز المرور غير صحيح</span>
+                </div>
+
+                <button type="submit" class="w-full py-3 bg-gradient-to-r from-emerald-700 to-emerald-900 text-white font-bold rounded-xl shadow-lg shadow-emerald-900/40 text-xs md:text-sm transition-all hover:scale-[1.02]">
+                    <span x-text="lang === 'ar' ? 'دخول المنصة &larr;' : 'Access Hub &larr;'">دخول المنصة</span>
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <!-- ذيل الصفحة (Footer) -->
+    <footer class="glass-card border-t border-emerald-900/50 py-6 text-xs text-slate-400 z-10 text-center">
+        <div class="max-w-6xl mx-auto px-4 space-y-1">
+            <p class="font-bold text-emerald-400 text-xs">
+                <span x-text="lang === 'ar' ? 'إشراف: ' : 'Supervised by: '"></span>
+                <span class="text-white font-black">هزاع الهزاع</span>
+            </p>
+            <p class="text-[10px] text-slate-400" x-text="lang === 'ar' ? 'جميع الحقوق محفوظة © 2026 - كلية الملك عبدالله للدفاع الجوي' : 'All Rights Reserved © 2026 - KAADA'"></p>
+        </div>
+    </footer>
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(() => console.log('Service Worker Registered!'))
+                .catch((err) => console.log('SW Registration Failed:', err));
+        });
     }
 </script>
 </body>

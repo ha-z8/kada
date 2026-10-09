@@ -18,7 +18,7 @@
 </head>
 <body class="bg-[#0c1410] text-slate-100 min-h-screen flex flex-col justify-between selection:bg-emerald-600 selection:text-white relative overflow-x-hidden"
       :class="zenMode ? 'bg-black text-slate-200' : ''"
-      x-data="quizApp()">
+      x-data="Object.assign(quizApp(), customPomodoro())">
 
     <!-- خلفيات مضيئة هادئة مريحة للعين -->
     <div class="absolute top-0 -left-4 w-72 md:w-96 h-72 md:h-96 bg-emerald-800/10 rounded-full blur-3xl pointer-events-none" x-show="!zenMode"></div>
@@ -29,19 +29,14 @@
          x-show="notification.show"
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0 -translate-y-4"
-         x-transition:enter-end="opacity-100 translate-y-0"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100 translate-y-0"
-         x-transition:leave-end="opacity-0 -translate-y-4">
+         x-transition:enter-end="opacity-100 translate-y-0">
         <div class="glass-card bg-emerald-950/95 border border-emerald-500/60 text-emerald-200 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 pointer-events-auto">
-            <div class="w-8 h-8 rounded-xl bg-emerald-800/60 flex items-center justify-center text-emerald-300 shrink-0 font-bold">
-                ✓
-            </div>
+            <div class="w-8 h-8 rounded-xl bg-emerald-800/60 flex items-center justify-center text-emerald-300 shrink-0 font-bold">✓</div>
             <div class="text-xs font-semibold leading-relaxed" x-text="notification.message">رسالة الإشعار</div>
         </div>
     </div>
 
-    <!-- الشريط العلوي -->
+    <!-- الشريط العلوي (يتم إدارته عبر layout.js موحداً لجميع الصفحات) -->
     <header class="glass-card border-b border-emerald-900/40 sticky top-0 z-50">
         <div class="max-w-6xl mx-auto px-3 md:px-4 py-3 flex justify-between items-center">
             <div class="flex items-center gap-2.5 cursor-pointer" @click="returnToHome()">
@@ -86,42 +81,54 @@
             </div>
 
             <!-- شريط الخدمات -->
-            <div class="glass-card p-3 md:p-4 rounded-2xl flex flex-col sm:flex-row gap-3 items-center justify-between shadow-xl">
-                <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
-                    <span class="text-xs font-semibold text-slate-300" x-text="lang === 'ar' ? 'مؤقت السؤال:' : 'Timer:'">مؤقت السؤال:</span>
-                    <select x-model.number="timerSeconds" class="bg-slate-900 border border-emerald-900/60 rounded-xl px-2.5 py-1.5 text-xs text-emerald-300 focus:outline-none focus:border-emerald-500">
-                        <option value="30" x-text="lang === 'ar' ? '30 ثانية' : '30s'">30 ثانية</option>
-                        <option value="60" x-text="lang === 'ar' ? '60 ثانية' : '60s'">60 ثانية</option>
-                        <option value="0" x-text="lang === 'ar' ? 'بدون وقت' : 'Unlimited'">بدون وقت</option>
-                    </select>
-                </div>
-                <div class="grid grid-cols-2 sm:flex flex-wrap gap-2 w-full sm:w-auto">
-                    <button @click="openBookmarks()" class="px-3 py-2 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-600/30 text-emerald-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow">
-                        ⭐ <span x-text="(lang === 'ar' ? 'بنك المفضلة (' : 'Fav (') + bookmarks.length + ')'">بنك المفضلة</span>
-                    </button>
-                    <button @click="openFlashcards()" class="px-3 py-2 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-600/30 text-emerald-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow">
-                        🃏 <span x-text="lang === 'ar' ? 'بطاقات الاستذكار' : 'Flashcards'">بطاقات الاستذكار</span>
-                    </button>
-                    <button @click="openAnalytics()" class="px-3 py-2 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-600/30 text-emerald-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow">
-                        📊 <span x-text="lang === 'ar' ? 'مؤشرات الأداء' : 'Analytics'">مؤشرات الأداء</span>
-                    </button>
-                    <button @click="openCustomQuizBuilder()" class="px-3 py-2 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-600/30 text-emerald-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow">
-                        ⚡ <span x-text="lang === 'ar' ? 'المحاكي الحر' : 'Custom Quiz'">المحاكي الحر</span>
-                    </button>
-                    <button @click="openCalculator()" class="px-3 py-2 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-600/30 text-emerald-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow">
-                        🧮 <span x-text="lang === 'ar' ? 'حاسبة المعدل' : 'GPA Calc'">حاسبة المعدل</span>
-                    </button>
-                    <button @click="openPomodoro()" class="px-3 py-2 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-600/30 text-emerald-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow">
-                        ⏱️ <span x-text="lang === 'ar' ? 'مؤقت التركيز' : 'Pomodoro'">مؤقت التركيز</span>
-                    </button>
-                    <button @click="openNotes()" class="px-3 py-2 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-600/30 text-emerald-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow">
-                        📝 <span x-text="lang === 'ar' ? 'دفتر الملاحظات' : 'Notes'">دفتر الملاحظات</span>
-                    </button>
-                    <button @click="openStudyGuide()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-700 to-emerald-900 text-white text-xs font-bold shadow-lg shadow-emerald-900/40 transition-all col-span-2 sm:col-span-1 flex items-center justify-center gap-1.5">
-                        📖 <span x-text="lang === 'ar' ? 'دليل الشرح' : 'Study Guide'">دليل الشرح</span>
-                    </button>
-                </div>
-            </div>
+            <div class="glass-card p-3.5 md:p-4 rounded-2xl space-y-3 shadow-xl">
+    <!-- شريط اختيار مؤقت السؤال بتصميم أزرار عصرية متناسقة -->
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-2.5 pb-3 border-b border-emerald-900/40">
+        <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-emerald-400">⏱️ مؤقت السؤال:</span>
+            <span class="text-[11px] text-slate-400 font-mono" x-text="timerSeconds === 0 ? '(بدون حد زمني)' : '(' + timerSeconds + ' ثانية لكل سؤال)'"></span>
+        </div>
+        <div class="flex items-center gap-1.5 w-full sm:w-auto">
+            <button @click="timerSeconds = 30" :class="timerSeconds === 30 ? 'bg-emerald-700 border-emerald-500 text-white shadow-lg' : 'bg-slate-900/90 text-slate-300 border-emerald-900/60 hover:bg-slate-800'" class="flex-1 sm:flex-none px-3 py-1.5 rounded-xl text-xs font-bold border transition-all">
+                30 ثانية
+            </button>
+            <button @click="timerSeconds = 60" :class="timerSeconds === 60 ? 'bg-emerald-700 border-emerald-500 text-white shadow-lg' : 'bg-slate-900/90 text-slate-300 border-emerald-900/60 hover:bg-slate-800'" class="flex-1 sm:flex-none px-3 py-1.5 rounded-xl text-xs font-bold border transition-all">
+                60 ثانية
+            </button>
+            <button @click="timerSeconds = 0" :class="timerSeconds === 0 ? 'bg-emerald-700 border-emerald-500 text-white shadow-lg' : 'bg-slate-900/90 text-slate-300 border-emerald-900/60 hover:bg-slate-800'" class="flex-1 sm:flex-none px-3 py-1.5 rounded-xl text-xs font-bold border transition-all">
+                بدون وقت
+            </button>
+        </div>
+    </div>
+
+    <!-- شبكة الأزرار والخدمات العصرية -->
+    <div class="grid grid-cols-2 sm:flex flex-wrap gap-2 w-full">
+        <button @click="openBookmarks()" class="px-3 py-2 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-600/30 text-emerald-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow">
+            ⭐ <span x-text="(lang === 'ar' ? 'بنك المفضلة (' : 'Fav (') + bookmarks.length + ')'">بنك المفضلة</span>
+        </button>
+        <button @click="openAnalytics()" class="px-3 py-2 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-600/30 text-emerald-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow">
+            📊 <span x-text="lang === 'ar' ? 'مؤشرات الأداء' : 'Analytics'">مؤشرات الأداء</span>
+        </button>
+        <button @click="openCustomQuizBuilder()" class="px-3 py-2 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-600/30 text-emerald-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow">
+            ⚡ <span x-text="lang === 'ar' ? 'المحاكي الحر' : 'Custom Quiz'">المحاكي الحر</span>
+        </button>
+        <button @click="startSmartWeaknessQuiz()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-red-900/60 to-amber-900/60 hover:from-red-900 hover:to-amber-900 border border-red-500/40 text-amber-200 text-xs font-bold transition-all shadow flex items-center justify-center gap-1.5 col-span-2 sm:col-span-1">
+            🎯 <span x-text="lang === 'ar' ? 'اختبار الأخطاء الذكي' : 'Weakness Hunter'">اختبار الأخطاء الذكي</span>
+        </button>
+        <button @click="openCalculator()" class="px-3 py-2 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-600/30 text-emerald-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow">
+            🧮 <span x-text="lang === 'ar' ? 'حاسبة المعدل' : 'GPA Calc'">حاسبة المعدل</span>
+        </button>
+        <button @click="openPomodoro()" class="px-3 py-2 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-600/30 text-emerald-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow">
+            ⏱️ <span x-text="lang === 'ar' ? 'مؤقت التركيز' : 'Pomodoro'">مؤقت التركيز</span>
+        </button>
+        <button @click="openNotes()" class="px-3 py-2 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-600/30 text-emerald-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow">
+            📝 <span x-text="lang === 'ar' ? 'دفتر الملاحظات' : 'Notes'">دفتر الملاحظات</span>
+        </button>
+        <button @click="openStudyGuide()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-700 to-emerald-900 text-white text-xs font-bold shadow-lg shadow-emerald-900/40 transition-all col-span-2 sm:col-span-1 flex items-center justify-center gap-1.5">
+            📖 <span x-text="lang === 'ar' ? 'دليل الشرح' : 'Study Guide'">دليل الشرح</span>
+        </button>
+    </div>
+</div>
 
             <!-- شبكة المواد الدراسية -->
             <div class="grid sm:grid-cols-2 gap-3.5 md:gap-4">
@@ -182,26 +189,25 @@
                 </div>
             </div>
 
-                    <!-- بطاقة الخريطة الإلكترونية لطلبة الكلية بتصميم خريطة خلفي هادئ -->
-<div onclick="window.location.href='map.html'" class="glass-card hover:border-emerald-500/60 p-5 md:p-6 rounded-3xl cursor-pointer transition-all duration-300 shadow-xl group flex flex-col justify-between hover:scale-[1.01] relative overflow-hidden bg-gradient-to-br from-emerald-950/50 via-slate-900/90 to-emerald-900/30 border border-emerald-600/40">
-    <!-- تصميم خريطة خلفي هندسي باهت ومخفي بشكل فخم -->
-    <div class="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:16px_16px]"></div>
-    <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
-    
-    <div class="relative z-10">
-        <div class="flex justify-between items-start mb-3">
-            <span class="bg-emerald-600/10 text-emerald-400 border border-emerald-600/30 text-[11px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">GIS Portal</span>
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-        </div>
-        <h3 class="text-base md:text-lg font-bold text-white group-hover:text-emerald-300 transition-colors" x-text="lang === 'ar' ? 'الخرائط الإلكترونية لطلبة الكلية' : 'Student Electronic Maps'">الخرائط الإلكترونية لطلبة الكلية</h3>
-        <p class="text-slate-400 text-xs mt-2 leading-relaxed" x-text="lang === 'ar' ? 'استعراض خريطة الأقمار الصناعية، مباني التعليم، والمرافق الحية مع محرك بحث فوري وتصميم هندسي دقيق.' : 'Explore satellite maps, barracks, and facilities with live search.'">استعراض خريطة الأقمار الصناعية ومواقع السرايا ومباني التعليم مع محرك بحث فوري.</p>
-    </div>
-    
-    <div class="mt-5 flex items-center justify-between pt-3 border-t border-emerald-900/40 text-xs text-emerald-400 font-bold group-hover:translate-x-1 transition-transform relative z-10">
-        <span x-text="lang === 'ar' ? 'فتح الخريطة التفاعلية &larr;' : 'Open Interactive Map &larr;'">فتح الخريطة التفاعلية &larr;</span>
-        <span class="text-lg">🗺️</span>
-    </div>
-</div>
+            <!-- بطاقة الخريطة الإلكترونية -->
+            <div onclick="window.location.href='map.html'" class="glass-card hover:border-emerald-500/60 p-5 md:p-6 rounded-3xl cursor-pointer transition-all duration-300 shadow-xl group flex flex-col justify-between hover:scale-[1.01] relative overflow-hidden bg-gradient-to-br from-emerald-950/50 via-slate-900/90 to-emerald-900/30 border border-emerald-600/40">
+                <div class="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                
+                <div class="relative z-10">
+                    <div class="flex justify-between items-start mb-3">
+                        <span class="bg-emerald-600/10 text-emerald-400 border border-emerald-600/30 text-[11px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">GIS Portal</span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    </div>
+                    <h3 class="text-base md:text-lg font-bold text-white group-hover:text-emerald-300 transition-colors" x-text="lang === 'ar' ? 'الخرائط الإلكترونية لطلبة الكلية' : 'Student Electronic Maps'">الخرائط الإلكترونية لطلبة الكلية</h3>
+                    <p class="text-slate-400 text-xs mt-2 leading-relaxed" x-text="lang === 'ar' ? 'استعراض خريطة الأقمار الصناعية، مباني التعليم، والمرافق الحية مع محرك بحث فوري وتصميم هندسي دقيق.' : 'Explore satellite maps, barracks, and facilities with live search.'">استعراض خريطة الأقمار الصناعية ومواقع السرايا ومباني التعليم مع محرك بحث فوري.</p>
+                </div>
+                
+                <div class="mt-5 flex items-center justify-between pt-3 border-t border-emerald-900/40 text-xs text-emerald-400 font-bold group-hover:translate-x-1 transition-transform relative z-10">
+                    <span x-text="lang === 'ar' ? 'فتح الخريطة التفاعلية &larr;' : 'Open Interactive Map &larr;'">فتح الخريطة التفاعلية &larr;</span>
+                    <span class="text-lg">🗺️</span>
+                </div>
+            </div>
         </div>
 
         <!-- 2. واجهة الاختبار النشط -->
@@ -210,23 +216,34 @@
                 <div class="bg-gradient-to-r from-emerald-600 to-amber-500 h-2.5 transition-all duration-300 rounded-full" :style="'width: ' + ((currentIndex + 1) / currentQuestions.length) * 100 + '%'"></div>
             </div>
 
-            <div class="glass-card p-3.5 md:p-4 rounded-2xl flex justify-between items-center shadow-lg">
-                <div>
-                    <span class="bg-emerald-600/10 text-emerald-400 text-[11px] px-2.5 py-0.5 rounded-full font-bold border border-emerald-600/30" x-text="currentCategory">Category</span>
-                    <h3 class="text-sm md:text-base font-bold text-white mt-1" x-text="currentTitle">Quiz Title</h3>
-                </div>
-                <div class="flex items-center gap-2.5">
-                    <button @click="toggleBookmark(currentQuestions[currentIndex])" 
-                            class="px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all flex items-center gap-1 shadow"
-                            :class="isBookmarked(currentQuestions[currentIndex]) ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-slate-900 text-slate-400 border-slate-700 hover:text-amber-300'">
-                        ⭐ <span class="hidden sm:inline" x-text="isBookmarked(currentQuestions[currentIndex]) ? (lang === 'ar' ? 'محفوظ' : 'Saved') : (lang === 'ar' ? 'حفظ' : 'Save')">حفظ</span>
-                    </button>
-                    <div class="text-left">
-                        <span class="text-[10px] text-slate-400 block" x-text="lang === 'ar' ? 'السؤال' : 'Q'">السؤال</span>
-                        <span class="text-sm md:text-lg font-mono font-bold text-emerald-400" x-text="(currentIndex + 1) + ' / ' + currentQuestions.length">1 / 20</span>
-                    </div>
-                </div>
-            </div>
+            <!-- ترويسة الاختبار النشط (اضف هذا الجزء في مكان عرض السؤال والتقدم) -->
+<div class="glass-card p-3.5 md:p-4 rounded-2xl flex justify-between items-center shadow-lg">
+    <div>
+        <span class="bg-emerald-600/10 text-emerald-400 text-[11px] px-2.5 py-0.5 rounded-full font-bold border border-emerald-600/30" x-text="currentCategory">Category</span>
+        <h3 class="text-sm md:text-base font-bold text-white mt-1" x-text="currentTitle">Quiz Title</h3>
+    </div>
+    
+    <div class="flex items-center gap-3">
+        <!-- مؤقت الوقت الفعلي للثواني المتبقية (يظهر فقط إذا كان المؤقت مفعلاً أكبر من 0) -->
+        <div x-show="timerSeconds > 0" class="px-3 py-1.5 rounded-xl bg-slate-900 border border-emerald-500/40 text-emerald-300 text-xs font-mono font-bold flex items-center gap-1.5 shadow-inner">
+            <span>⏱️</span>
+            <span x-text="timeLeft + ' ثانية'">30 ثانية</span>
+        </div>
+
+        <!-- زر بنك المفضلة -->
+        <button @click="toggleBookmark(currentQuestions[currentIndex])" 
+                class="px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all flex items-center gap-1 shadow"
+                :class="isBookmarked(currentQuestions[currentIndex]) ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-slate-900 text-slate-400 border-slate-700 hover:text-amber-300'">
+            ⭐ <span class="hidden sm:inline" x-text="isBookmarked(currentQuestions[currentIndex]) ? (lang === 'ar' ? 'محفوظ' : 'Saved') : (lang === 'ar' ? 'حفظ' : 'Save')">حفظ</span>
+        </button>
+
+        <!-- عداد رقم السؤال -->
+        <div class="text-left">
+            <span class="text-[10px] text-slate-400 block" x-text="lang === 'ar' ? 'السؤال' : 'Q'">السؤال</span>
+            <span class="text-sm md:text-lg font-mono font-bold text-emerald-400" x-text="(currentIndex + 1) + ' / ' + currentQuestions.length">1 / 20</span>
+        </div>
+    </div>
+</div>
 
             <div class="glass-card p-5 md:p-8 rounded-3xl shadow-2xl space-y-5 relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-600/5 rounded-full blur-2xl pointer-events-none"></div>
@@ -329,68 +346,6 @@
             </div>
         </div>
 
-        <!-- 4. دليل الشرح والمسائل -->
-        <div x-show="currentView === 'study_guide'" class="space-y-6" x-transition:enter="transition ease-out duration-300">
-            <div class="glass-card p-5 md:p-8 rounded-3xl shadow-2xl space-y-5">
-                <div class="flex flex-wrap justify-between items-center gap-3 border-b border-emerald-900/40 pb-4">
-                    <div>
-                        <span class="bg-emerald-600/10 text-emerald-400 border border-emerald-600/30 text-[11px] px-2.5 py-1 rounded-full font-bold">Study Guide</span>
-                        <h3 class="text-lg md:text-2xl font-black text-white mt-1" x-text="lang === 'ar' ? 'دليل الشرح الكامل والمسائل' : 'Complete Study Guide'">دليل الشرح الكامل والمسائل</h3>
-                    </div>
-                    <button @click="returnToHome()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-emerald-900/60 transition-colors">
-                        &larr; <span x-text="lang === 'ar' ? 'العودة' : 'Back'">العودة</span>
-                    </button>
-                </div>
-
-                <div class="flex flex-col sm:flex-row gap-3 justify-between items-center">
-                    <div class="flex gap-1.5 flex-wrap w-full sm:w-auto">
-                        <button @click="studyGuideSubject = 'aqeedah'; searchQuery = ''" :class="studyGuideSubject === 'aqeedah' ? 'bg-emerald-700 text-white border-emerald-500' : 'bg-slate-900 text-slate-300 border-emerald-900/60'" class="px-3 py-1.5 rounded-xl text-xs font-bold border transition-all">العقيدة</button>
-                        <button @click="studyGuideSubject = 'chem'; searchQuery = ''" :class="studyGuideSubject === 'chem' ? 'bg-emerald-700 text-white border-emerald-500' : 'bg-slate-900 text-slate-300 border-emerald-900/60'" class="px-3 py-1.5 rounded-xl text-xs font-bold border transition-all">Chemistry</button>
-                        <button @click="studyGuideSubject = 'math'; searchQuery = ''" :class="studyGuideSubject === 'math' ? 'bg-emerald-700 text-white border-emerald-500' : 'bg-slate-900 text-slate-300 border-emerald-900/60'" class="px-3 py-1.5 rounded-xl text-xs font-bold border transition-all">Math</button>
-                        <button @click="studyGuideSubject = 'comp'; searchQuery = ''" :class="studyGuideSubject === 'comp' ? 'bg-emerald-700 text-white border-emerald-500' : 'bg-slate-900 text-slate-300 border-emerald-900/60'" class="px-3 py-1.5 rounded-xl text-xs font-bold border transition-all">Computer</button>
-                    </div>
-                    <div class="w-full sm:w-64">
-                        <input type="text" x-model="searchQuery" :placeholder="lang === 'ar' ? 'بحث سريع...' : 'Search...'" class="w-full bg-slate-900 border border-emerald-900/60 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
-                    </div>
-                </div>
-
-                <div class="space-y-3.5 pt-1">
-                    <template x-for="(qItem, qIdx) in filteredStudyQuestions" :key="qIdx">
-                        <div class="p-4 md:p-5 rounded-2xl bg-slate-900/90 border border-emerald-900/40 space-y-2.5 shadow-lg relative">
-                            <div class="flex justify-between items-center text-xs text-slate-400 font-mono">
-                                <span class="text-emerald-400 font-bold" x-text="(lang === 'ar' ? 'السؤال ' : 'Question ') + (qIdx + 1)">السؤال</span>
-                                <div class="flex items-center gap-1.5">
-                                    <button @click="toggleBookmark(qItem)" class="px-2 py-1 rounded-lg text-[11px] border transition-colors flex items-center gap-1"
-                                            :class="isBookmarked(qItem) ? 'bg-emerald-600/20 text-emerald-300 border-emerald-600/40' : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-emerald-300'">
-                                        ⭐ <span x-text="isBookmarked(qItem) ? (lang === 'ar' ? 'محفوظ' : 'Saved') : (lang === 'ar' ? 'حفظ' : 'Save')">حفظ</span>
-                                    </button>
-                                    <button @click="navigator.clipboard.writeText(qItem.q + '\n' + qItem.options.join(', ') + '\nالشرح: ' + qItem.explanation); showNotify(lang === 'ar' ? 'تم نسخ السؤال بنجاح!' : 'Copied successfully!');" class="text-slate-400 hover:text-emerald-300 bg-slate-800 px-2 py-1 rounded-lg text-[11px] transition-colors">
-                                        📋 <span x-text="lang === 'ar' ? 'نسخ' : 'Copy'">نسخ</span>
-                                    </button>
-                                </div>
-                            </div>
-                            <p class="text-xs md:text-sm font-bold text-white" x-text="qItem.q">نص السؤال</p>
-                            
-                            <div class="grid sm:grid-cols-2 gap-2 pt-1">
-                                <template x-for="(optText, optIdx) in qItem.options" :key="optIdx">
-                                    <div class="p-2.5 rounded-xl border text-[11px] md:text-xs flex items-center justify-between"
-                                           :class="optIdx === qItem.correct ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-200 font-bold' : 'bg-slate-950/40 border-slate-800 text-slate-400'">
-                                        <span x-text="optText">الخيار</span>
-                                        <span class="font-mono text-[10px] opacity-70" x-text="String.fromCharCode(65 + optIdx)">A</span>
-                                    </div>
-                                </template>
-                            </div>
-
-                            <div class="bg-emerald-950/20 border border-emerald-500/30 p-3 rounded-xl text-xs space-y-1 mt-1.5">
-                                <p class="font-bold text-emerald-300 text-[11px]">الشرح العلمي وطريقة الحل:</p>
-                                <p class="text-slate-200 leading-relaxed text-[11px] md:text-xs" x-text="qItem.explanation">شرح السؤال...</p>
-                            </div>
-                        </div>
-                    </template>
-                </div>
-            </div>
-        </div>
-
         <!-- 5. بنك المفضلة -->
         <div x-show="currentView === 'bookmarks'" class="space-y-6" x-transition:enter="transition ease-out duration-300">
             <div class="glass-card p-5 md:p-8 rounded-3xl shadow-2xl space-y-5">
@@ -424,39 +379,6 @@
                             </div>
                         </div>
                     </template>
-                </div>
-            </div>
-        </div>
-
-        <!-- 6. بطاقات الاستذكار -->
-        <div x-show="currentView === 'flashcards'" class="space-y-6" x-transition:enter="transition ease-out duration-300">
-            <div class="glass-card p-5 md:p-8 rounded-3xl shadow-2xl space-y-5 text-center">
-                <div class="flex justify-between items-center border-b border-emerald-900/40 pb-4">
-                    <div class="text-right">
-                        <span class="bg-emerald-600/10 text-emerald-400 border border-emerald-600/30 text-[11px] px-2.5 py-1 rounded-full font-bold">Flashcards</span>
-                        <h3 class="text-lg md:text-2xl font-black text-white mt-1" x-text="lang === 'ar' ? 'بطاقات الاستذكار السريع' : 'Study Flashcards'">بطاقات الاستذكار</h3>
-                    </div>
-                    <button @click="returnToHome()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-emerald-900/60 transition-colors">
-                        &larr; <span x-text="lang === 'ar' ? 'العودة' : 'Back'">العودة</span>
-                    </button>
-                </div>
-
-                <div class="py-4 space-y-5">
-                    <div class="bg-slate-900 border border-emerald-900/60 p-6 md:p-8 rounded-3xl shadow-2xl min-h-[200px] flex flex-col justify-center items-center cursor-pointer transition-all hover:border-emerald-500"
-                         @click="flashcardFlipped = !flashcardFlipped">
-                        <span class="text-[11px] text-emerald-400 font-mono mb-2" x-text="flashcardFlipped ? (lang === 'ar' ? '✨ الإجابة والشرح' : '✨ Answer') : (lang === 'ar' ? '❓ اضغط لقلب البطاقة' : '❓ Click to flip')">السؤال</span>
-                        <p class="text-sm md:text-lg font-bold text-white max-w-xl leading-relaxed" x-text="flashcardFlipped ? getCurrentFlashcard().explanation : getCurrentFlashcard().q"></p>
-                    </div>
-
-                    <div class="flex justify-center items-center gap-3">
-                        <button @click="prevFlashcard(); flashcardFlipped = false;" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-emerald-900/60 rounded-xl text-xs font-bold text-slate-300">
-                            &rarr; <span x-text="lang === 'ar' ? 'السابقة' : 'Prev'">السابقة</span>
-                        </button>
-                        <span class="text-xs font-mono text-emerald-300" x-text="(flashcardIndex + 1) + ' / ' + getFlashcardsList().length">1 / 10</span>
-                        <button @click="nextFlashcard(); flashcardFlipped = false;" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 rounded-xl text-xs font-bold text-white">
-                            <span x-text="lang === 'ar' ? 'التالية' : 'Next'">التالية</span> &larr;
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>
@@ -528,9 +450,10 @@
                 </div>
             </div>
         </div>
+        
 
         <!-- 9. دفتر الملاحظات الشخصي -->
-        <div x-show="currentView === 'notes'" class="space-y-6" x-transition:enter="transition ease-out duration-300">
+        <div x-show="currentView === 'notes'" class="space-y-6" x-transition:enter="transition ease-out duration-300" x-data="notesManager()">
             <div class="glass-card p-5 md:p-8 rounded-3xl shadow-2xl space-y-5">
                 <div class="flex justify-between items-center border-b border-emerald-900/40 pb-4">
                     <div>
@@ -544,12 +467,12 @@
 
                 <div class="space-y-3">
                     <p class="text-xs text-slate-400" x-text="lang === 'ar' ? 'تدوين القوانين والملاحظات المهمة. يتم الحفظ تلقائياً في المتصفح.' : 'Write notes. Saved automatically.'">تدوين القوانين والملاحظات. الحفظ تلقائي.</p>
-                    <textarea x-model="userNotes" @input="saveNotes()" rows="8" 
+                    <textarea x-model="userNotes" @input="saveUserNotes()" rows="8" 
                               class="w-full bg-slate-900 border border-emerald-900/60 rounded-2xl p-4 text-xs md:text-sm text-slate-100 focus:outline-none focus:border-emerald-500 shadow-inner leading-relaxed"
                               :placeholder="lang === 'ar' ? 'اكتب ملاحظاتك هنا...' : 'Type notes here...'"></textarea>
                     <div class="flex justify-between items-center text-xs text-slate-400">
                         <span x-text="lang === 'ar' ? '✨ محفوظ محلياً' : '✨ Saved locally'">محفوظ محلياً</span>
-                        <button @click="userNotes = ''; saveNotes(); showNotify(lang === 'ar' ? 'تم مسح الملاحظات' : 'Notes cleared')" class="text-red-400 hover:text-red-300 font-semibold">
+                        <button @click="userNotes = ''; saveUserNotes(); showNotify(lang === 'ar' ? 'تم مسح الملاحظات' : 'Notes cleared')" class="text-red-400 hover:text-red-300 font-semibold">
                             <span x-text="lang === 'ar' ? 'مسح الكل' : 'Clear All'">مسح الكل</span>
                         </button>
                     </div>
@@ -590,32 +513,60 @@
             </div>
         </div>
 
-        <!-- 11. مؤقت بومودورو للتركيز -->
+        <!-- 11. مؤقت التركيز المطور -->
         <div x-show="currentView === 'pomodoro'" class="space-y-6" x-transition:enter="transition ease-out duration-300">
-            <div class="glass-card p-5 md:p-8 rounded-3xl shadow-2xl space-y-5 text-center">
+            <div class="glass-card p-6 md:p-10 rounded-3xl shadow-2xl space-y-6 text-center max-w-lg mx-auto border border-emerald-500/30 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-40 h-40 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
                 <div class="flex justify-between items-center border-b border-emerald-900/40 pb-4">
                     <div class="text-right">
-                        <span class="bg-emerald-600/10 text-emerald-400 border border-emerald-600/30 text-[11px] px-2.5 py-1 rounded-full font-bold">Pomodoro</span>
-                        <h3 class="text-lg md:text-2xl font-black text-white mt-1" x-text="lang === 'ar' ? 'مؤقت بومودورو للتركيز' : 'Pomodoro Timer'">مؤقت بومودورو للتركيز</h3>
+                        <span class="bg-emerald-600/10 text-emerald-400 border border-emerald-600/30 text-[11px] px-2.5 py-1 rounded-full font-bold">Pro Timer</span>
+                        <h3 class="text-lg md:text-xl font-black text-white mt-1">مؤقت التركيز</h3>
                     </div>
-                    <button @click="returnToHome()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-emerald-900/60 transition-colors">
-                        &larr; <span x-text="lang === 'ar' ? 'العودة' : 'Back'">العودة</span>
+                    <button @click="returnToHome()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-emerald-900/60 transition-colors">
+                        &larr; العودة
                     </button>
                 </div>
 
-                <div class="py-6 space-y-4">
-                    <div class="text-5xl md:text-7xl font-mono font-black text-emerald-400 glow-effect" x-text="formatPomodoroTime()">25:00</div>
-                    <p class="text-xs md:text-sm text-slate-400" x-text="pomoRunning ? (lang === 'ar' ? '🔥 جلسة تركيز نشطة!' : '🔥 Session active!') : (lang === 'ar' ? 'جاهز للبدء' : 'Ready')">جاهز للبدء</p>
-                    
+                <div class="space-y-6 py-2">
+                    <div class="space-y-2" x-show="!pomoRunning">
+                        <span class="text-xs text-slate-400 block">اختر المدة السريعة:</span>
+                        <div class="grid grid-cols-4 gap-2">
+                            <button @click="setMinutes(15)" :class="inputMinutes === 15 ? 'bg-emerald-700 text-white border-emerald-400' : 'bg-slate-900 text-slate-300 border-emerald-900/60'" class="py-2 rounded-xl text-xs font-bold border transition-all shadow">15 دقيقة</button>
+                            <button @click="setMinutes(25)" :class="inputMinutes === 25 ? 'bg-emerald-700 text-white border-emerald-400' : 'bg-slate-900 text-slate-300 border-emerald-900/60'" class="py-2 rounded-xl text-xs font-bold border transition-all shadow">25 دقيقة</button>
+                            <button @click="setMinutes(45)" :class="inputMinutes === 45 ? 'bg-emerald-700 text-white border-emerald-400' : 'bg-slate-900 text-slate-300 border-emerald-900/60'" class="py-2 rounded-xl text-xs font-bold border transition-all shadow">45 دقيقة</button>
+                            <button @click="setMinutes(60)" :class="inputMinutes === 60 ? 'bg-emerald-700 text-white border-emerald-400' : 'bg-slate-900 text-slate-300 border-emerald-900/60'" class="py-2 rounded-xl text-xs font-bold border transition-all shadow">60 دقيقة</button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 bg-slate-900/60 p-4 rounded-2xl border border-emerald-900/40 shadow-inner" x-show="!pomoRunning">
+                        <div class="flex justify-between items-center text-xs text-slate-300">
+                            <span>تحديد دقيق للوقت:</span>
+                            <span class="text-emerald-400 font-bold font-mono text-sm" x-text="inputMinutes + ' دقيقة'"></span>
+                        </div>
+                        <input type="range" 
+                               x-model.number="inputMinutes" 
+                               @input="setMinutes(inputMinutes)"
+                               min="5" max="120" step="5"
+                               class="w-full accent-emerald-500 bg-slate-800 rounded-lg cursor-pointer h-2">
+                    </div>
+
+                    <div class="p-6 rounded-3xl bg-slate-900/90 border border-emerald-500/30 shadow-2xl flex flex-col items-center justify-center">
+                        <div class="text-6xl md:text-7xl font-mono font-black text-emerald-400 glow-effect tracking-wider py-2" x-text="formatPomodoroTime()">
+                            00:00
+                        </div>
+                        <p class="text-xs text-slate-400 mt-2" x-text="pomoRunning ? '🔥 جلسة التركيز نشطة حالياً...' : '✨ جاهز للبدء، اضغط تشغيل'">جاهز</p>
+                    </div>
+
                     <div class="flex justify-center gap-3 pt-2">
-                        <button @click="startPomodoro()" x-show="!pomoRunning" class="px-5 py-2.5 bg-gradient-to-r from-emerald-700 to-emerald-900 text-white font-bold rounded-xl text-xs md:text-sm shadow-lg shadow-emerald-900/40">
-                            <span x-text="lang === 'ar' ? 'بدء (25 دقيقة)' : 'Start'">بدء</span>
+                        <button @click="startPomodoro()" x-show="!pomoRunning" class="px-8 py-3 bg-gradient-to-r from-emerald-700 to-emerald-900 text-white font-bold rounded-2xl text-xs md:text-sm shadow-lg shadow-emerald-900/40 transition-all hover:scale-105">
+                            ▶ بدء المؤقت
                         </button>
-                        <button @click="pausePomodoro()" x-show="pomoRunning" class="px-5 py-2.5 bg-amber-600 text-white font-bold rounded-xl text-xs md:text-sm shadow">
-                            <span x-text="lang === 'ar' ? 'إيقاف مؤقت' : 'Pause'">إيقاف</span>
+                        <button @click="pausePomodoro()" x-show="pomoRunning" class="px-6 py-3 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-2xl text-xs md:text-sm shadow transition-all">
+                            ⏸ إيقاف مؤقت
                         </button>
-                        <button @click="resetPomodoro()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs md:text-sm border border-emerald-900/60">
-                            <span x-text="lang === 'ar' ? 'إعادة ضبط' : 'Reset'">إعادة ضبط</span>
+                        <button @click="resetPomodoro()" class="px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl text-xs md:text-sm border border-emerald-900/60 transition-all">
+                            🔄 إعادة ضبط
                         </button>
                     </div>
                 </div>
@@ -624,67 +575,50 @@
 
     </main>
 
-    <!-- الذيل (Footer) مع لوحة معلومات الإصدار وزر المزامنة المتناسق بهوية الموقع -->
-    <!-- ذيل الصفحة (Footer) المنسق -->
-<footer class="glass-card border-t border-emerald-900/50 mt-12 py-6 text-xs text-slate-400 z-10">
-    <div class="max-w-6xl mx-auto px-4 grid md:grid-cols-3 gap-4 items-center text-center" :class="lang === 'ar' ? 'md:text-right' : 'md:text-left'">
-        <div class="space-y-0.5">
-            <p class="font-bold text-slate-200 text-xs md:text-sm" x-text="lang === 'ar' ? 'كلية الملك عبدالله للدفاع الجوي' : 'King Abdullah Air Defense Academy'"></p>
-            <p class="text-slate-400 text-[11px]" x-text="lang === 'ar' ? 'قسم طلبة المتوسط - منصة الاختبارات والمذاكرة الذكية' : 'Intermediate Section - Smart Quiz & Study Hub'"></p>
-        </div>
-        
-        <div class="space-y-0.5 text-center flex flex-col items-center justify-center">
-            <p class="font-bold text-emerald-400 tracking-wide text-[11px]">
-                <span x-text="lang === 'ar' ? 'إشراف: ' : 'Supervised by: '"></span>
-                <span class="text-white font-black">هزاع الهزاع</span>
-            </p>
-            <p class="text-slate-400 text-[10px]" x-text="lang === 'ar' ? 'جميع الحقوق محفوظة © 2026' : 'All Rights Reserved © 2026'"></p>
-            <span class="text-[10px] text-emerald-400/80 font-mono mt-1" x-text="lang === 'ar' ? 'آخر تحديث: 24 سبتمبر 2026 - V7.2' : 'Last Updated: Sep 24, 2026 - V7.2'">آخر تحديث: 24 سبتمبر 2026</span>
-        </div>
+    <!-- ذيل الصفحة (Footer) -->
+    <footer class="glass-card border-t border-emerald-900/50 mt-12 py-6 text-xs text-slate-400 z-10">
+        <div class="max-w-6xl mx-auto px-4 grid md:grid-cols-3 gap-4 items-center text-center" :class="lang === 'ar' ? 'md:text-right' : 'md:text-left'">
+            <div class="space-y-0.5">
+                <p class="font-bold text-slate-200 text-xs md:text-sm" x-text="lang === 'ar' ? 'كلية الملك عبدالله للدفاع الجوي' : 'King Abdullah Air Defense Academy'"></p>
+                <p class="text-slate-400 text-[11px]" x-text="lang === 'ar' ? 'قسم طلبة المتوسط - منصة الاختبارات والمذاكرة الذكية' : 'Intermediate Section - Smart Quiz & Study Hub'"></p>
+            </div>
+            
+            <div class="space-y-0.5 text-center flex flex-col items-center justify-center">
+                <p class="font-bold text-emerald-400 tracking-wide text-[11px]">
+                    <span x-text="lang === 'ar' ? 'إشراف: ' : 'Supervised by: '"></span>
+                    <span class="text-white font-black">هزاع الهزاع</span>
+                </p>
+                <p class="text-slate-400 text-[10px]" x-text="lang === 'ar' ? 'جميع الحقوق محفوظة © 2026' : 'All Rights Reserved © 2026'"></p>
+                <span class="text-[10px] text-emerald-400/80 font-mono mt-1" x-text="lang === 'ar' ? 'آخر تحديث: أكتوبر 2026 - V9.0' : 'Last Updated: Oct 2026 - V9.0'">آخر تحديث: أكتوبر 2026</span>
+            </div>
 
-        <div class="flex justify-center md:justify-end">
-            <button @click="forceSyncUpdate()" class="px-3.5 py-1.5 rounded-xl bg-emerald-950/60 hover:bg-emerald-900 border border-emerald-600/40 text-emerald-300 text-[11px] font-bold transition-all shadow flex items-center gap-1.5">
-                <svg class="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                <span x-text="lang === 'ar' ? 'تحديث ومزامنة الأكواد' : 'Sync Latest Code'">تحديث ومزامنة الأكواد</span>
-            </button>
+            <div class="flex justify-center md:justify-end">
+                <button @click="forceSyncUpdate()" class="px-3.5 py-1.5 rounded-xl bg-emerald-950/60 hover:bg-emerald-900 border border-emerald-600/40 text-emerald-300 text-[11px] font-bold transition-all shadow flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <span x-text="lang === 'ar' ? 'تحديث ومزامنة الأكواد' : 'Sync Latest Code'">تحديث ومزامنة الأكواد</span>
+                </button>
+            </div>
         </div>
-    </div>
-</footer>
+    </footer>
 
-    <!-- ربط السكربتات بختم الإصدار وملف الإشعارات المستقل -->
-    <script src="./notifications.js?v=2026.9.5"></script>
-    <script src="./aqeedah.js?v=2026.9.5"></script>
-    <script src="./chemistry.js?v=2026.9.5"></script>
-    <script src="./math.js?v=2026.9.5"></script>
-    <script src="./computer.js?v=2026.9.5"></script>
-    <script src="./script.js?v=2026.9.5"></script>
+    <!-- ربط السكربتات وملف القالب الموحد -->
+    <script src="./notifications.js?v=2026.10.9"></script>
+    <script src="./aqeedah.js?v=2026.10.9"></script>
+    <script src="./chemistry.js?v=2026.10.9"></script>
+    <script src="./math.js?v=2026.10.9"></script>
+    <script src="./computer.js?v=2026.10.9"></script>
+    <script src="./fiqh.js?v=2026.10.9"></script>
+    <script src="./features.js?v=2026.10.9"></script>
+    <script src="./script.js?v=2026.10.9"></script>
+    <script src="./layout.js?v=2026.10.9"></script>
     <script>
-        function forceSyncUpdate() {
-            if (navigator.serviceWorker) {
-                navigator.serviceWorker.getRegistrations().then((registrations) => {
-                    for (let registration of registrations) {
-                        registration.unregister();
-                    }
-                    caches.keys().then((names) => {
-                        for (let name of names) {
-                            caches.delete(name);
-                        }
-                        alert('✨ تم تفريغ الكاش وسحب أحدث نسخة من السيرفر بنجاح!');
-                        window.location.reload(true);
-                    });
-                });
-            } else {
-                window.location.reload(true);
-            }
-        }
-
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then((reg) => console.log('Service Worker registered successfully!', reg))
-                    .catch((err) => console.log('Service Worker registration failure:', err));
-            });
-        }
-    </script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(() => console.log('Service Worker Registered!'))
+                .catch((err) => console.log('SW Registration Failed:', err));
+        });
+    }
+</script>
 </body>
 </html>

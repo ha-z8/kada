@@ -1,3 +1,4 @@
+// script.js - المنطق البرمجي الأساسي لمنصة KAADA
 const quizzesData = {
     aqeedah: {
         ...aqeedahData,
@@ -12,7 +13,6 @@ const quizzesData = {
 
 function quizApp() {
     return {
-        // دمج نظام الإشعارات
         ...createNotifier(),
 
         currentView: 'home',
@@ -25,8 +25,6 @@ function quizApp() {
         userAnswers: [],
         score: 0,
         userHistory: [],
-        studyGuideSubject: 'aqeedah',
-        searchQuery: '',
         timerInterval: null,
         timeLeft: 30,
         
@@ -44,39 +42,6 @@ function quizApp() {
         get statsAvgScore() {
             if (this.statsTotalQuizzes === 0) return 0;
             return Math.round(this.statsTotalScoreSum / this.statsTotalQuizzes);
-        },
-
-        flashcardIndex: 0,
-        flashcardFlipped: false,
-
-        openFlashcards() {
-            clearInterval(this.timerInterval);
-            this.flashcardIndex = 0;
-            this.flashcardFlipped = false;
-            this.currentView = 'flashcards';
-        },
-
-        getFlashcardsList() {
-            const sub = quizzesData[this.studyGuideSubject] || quizzesData.chem;
-            const qObj = (sub.arabicOnly || !sub[this.lang]) ? sub.ar : sub[this.lang];
-            return qObj.questions || qObj;
-        },
-
-        getCurrentFlashcard() {
-            const list = this.getFlashcardsList();
-            return list[this.flashcardIndex] || { q: 'لا توجد بطاقات', explanation: '' };
-        },
-
-        nextFlashcard() {
-            const list = this.getFlashcardsList();
-            if (this.flashcardIndex < list.length - 1) this.flashcardIndex++;
-            else this.flashcardIndex = 0;
-        },
-
-        prevFlashcard() {
-            const list = this.getFlashcardsList();
-            if (this.flashcardIndex > 0) this.flashcardIndex--;
-            else this.flashcardIndex = list.length - 1;
         },
 
         customSubject: 'chem',
@@ -184,7 +149,7 @@ function quizApp() {
         startPomodoro() {
             if (this.pomoRunning) return;
             this.pomoRunning = true;
-            this.showNotify('🔥 بدأت جلسة التركيز (25 دقيقة)');
+            this.showNotify('🔥 بدأت جلسة التركيز');
             this.pomoInterval = setInterval(() => {
                 if (this.pomoSeconds > 0) {
                     this.pomoSeconds--;
@@ -199,7 +164,7 @@ function quizApp() {
         pausePomodoro() {
             this.pomoRunning = false;
             clearInterval(this.pomoInterval);
-            this.showNotify('⏸️ تم إيقاف المؤقت مؤقتاً', 'warning');
+            this.showNotify('⏸️ تم إيقاف المؤقت مؤقتاً');
         },
 
         resetPomodoro() {
@@ -214,32 +179,55 @@ function quizApp() {
             return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         },
 
-        get filteredStudyQuestions() {
-            const subjectObj = quizzesData[this.studyGuideSubject];
-            if (!subjectObj) return [];
-            
-            let quiz = null;
-            if (subjectObj.arabicOnly || !subjectObj[this.lang]) {
-                quiz = subjectObj.ar || subjectObj;
-            } else {
-                quiz = subjectObj[this.lang];
-            }
+        // 1. جلب الأخطاء المخزنة مسبقاً
+getMistakesBank() {
+    return JSON.parse(localStorage.getItem('kaada_mistakes_bank')) || [];
+},
 
-            const list = quiz && quiz.questions ? quiz.questions : (Array.isArray(quiz) ? quiz : []);
-            
-            if (!this.searchQuery.trim()) return list;
-            const q = this.searchQuery.toLowerCase();
-            return list.filter(item => 
-                item.q.toLowerCase().includes(q) || 
-                item.explanation.toLowerCase().includes(q)
-            );
-        },
+// 2. حفظ أي سؤال خاطئ يقع فيه الطالب تلقائياً أثناء الاختبار
+saveMistakeToBank(questionObj) {
+    let mistakes = this.getMistakesBank();
+    // التأكد من عدم تكرار نفس السؤال في بنك الأخطاء
+    const exists = mistakes.some(m => m.q === questionObj.q);
+    if (!exists) {
+        mistakes.push(questionObj);
+        localStorage.setItem('kaada_mistakes_bank', JSON.stringify(mistakes));
+    }
+},
+
+// 3. إزالة السؤال من بنك الأخطاء إذا أجاب عليه الطالب بشكل صحيح لاحقاً
+removeMistakeFromBank(questionText) {
+    let mistakes = this.getMistakesBank();
+    mistakes = mistakes.filter(m => m.q !== questionText);
+    localStorage.setItem('kaada_mistakes_bank', JSON.stringify(mistakes));
+},
+
+// 4. بدء اختبار توليد الأخطاء الذكي
+startSmartWeaknessQuiz() {
+    const mistakes = this.getMistakesBank();
+    
+    if (!mistakes || mistakes.length === 0) {
+        this.showNotify('🎯 ممتاز! ليس لديك أي أخطاء مسجلة في بنك الأخطاء حالياً.');
+        return;
+    }
+
+    // خلط الأسئلة عشوائياً للمزيد من التحدي
+    let shuffledMistakes = [...mistakes].sort(() => 0.5 - Math.random());
+
+    this.currentTitle = 'اختبار بنك الأخطاء الذكي (معالجة الضعف)';
+    this.currentCategory = 'مراجعة مركزة';
+    this.currentQuestions = JSON.parse(JSON.stringify(shuffledMistakes));
+    this.currentIndex = 0;
+    this.userAnswers = new Array(this.currentQuestions.length).fill(null);
+    this.currentView = 'quiz';
+    this.loadQuestion();
+    
+    this.showNotify('⚡ تم توليد اختبار الأخطاء بنجاح، ركز في الإجابة!');
+},
 
         isSubjectVisible(key) {
             const item = quizzesData[key];
-            if (item && item.arabicOnly && this.lang !== 'ar') {
-                return false;
-            }
+            if (item && item.arabicOnly && this.lang !== 'ar') return false;
             return true;
         },
 
@@ -250,13 +238,7 @@ function quizApp() {
             
             if (quizGroup.arabicOnly && this.lang !== 'ar') return;
 
-            let targetQuiz = null;
-            if (quizGroup.arabicOnly || !quizGroup[this.lang]) {
-                targetQuiz = quizGroup.ar || quizGroup;
-            } else {
-                targetQuiz = quizGroup[this.lang];
-            }
-
+            let targetQuiz = (quizGroup.arabicOnly || !quizGroup[this.lang]) ? (quizGroup.ar || quizGroup) : quizGroup[this.lang];
             const rawQuestions = targetQuiz.questions || targetQuiz;
             if (!rawQuestions || rawQuestions.length === 0) return;
 
@@ -329,7 +311,21 @@ function quizApp() {
             this.currentQuestions.forEach((q, idx) => {
                 const selected = this.userAnswers[idx];
                 const isCorrect = (selected === q.correct);
-                if (isCorrect) this.score++;
+                
+                if (isCorrect) {
+                    this.score++;
+                    // إذا أجاب الطالب إجابة صحيحة، نحذف السؤال من بنك الأخطاء لأنه أتقنه
+                    this.removeMistakeFromBank(q.q);
+                } else {
+                    // إذا أخطأ، نقوم بحفظه تلقائياً في بنك الأخطاء الذكي
+                    this.saveMistakeToBank({
+                        q: q.q,
+                        options: q.options,
+                        correct: q.correct,
+                        explanation: q.explanation || "الشرح غير متوفر."
+                    });
+                }
+
                 this.userHistory.push({
                     question: q.q,
                     options: q.options,
@@ -347,7 +343,7 @@ function quizApp() {
             localStorage.setItem('kaada_score_sum', this.statsTotalScoreSum);
 
             this.currentView = 'results';
-            this.showNotify('🏁 انتهى الاختبار! تم رصد النتيجة بنجاح.');
+            this.showNotify('🏁 انتهى الاختبار! تم رصد النتيجة بنك الأخطاء وتحديثه.');
         },
 
         getResultPercentage() {
@@ -398,10 +394,7 @@ function quizApp() {
         },
 
         openStudyGuide() {
-            clearInterval(this.timerInterval);
-            this.studyGuideSubject = this.activeKey || 'chem';
-            this.searchQuery = '';
-            this.currentView = 'study_guide';
+            window.location.href = 'study.html';
         },
 
         returnToHome() {
