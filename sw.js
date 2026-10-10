@@ -1,6 +1,6 @@
-// sw.js - Service Worker للتشغيل أوفلاين بالكامل والتخزين المؤقت لمنصة KAADA
+// sw.js - Service Worker للتشغيل والتنقل أوفلاين بالكامل لمنصة KAADA
 
-const CACHE_NAME = 'kaada-hub-v2026.10.9';
+const CACHE_NAME = 'kaada-hub-v2026.10.10';
 
 // قائمة الملفات الأساسية التي يجب حفظها لتعمل المنصة بدون إنترنت
 const ASSETS_TO_CACHE = [
@@ -29,7 +29,7 @@ const ASSETS_TO_CACHE = [
     'https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Inter:wght@400;500;600;700;800&display=swap'
 ];
 
-// 1. مرحلة التثبيت (Install): حفظ الملفات في الكاش المحلي
+// 1. مرحلة التثبيت (Install): حفظ الملفات الأساسية في الكاش المحلي
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
@@ -42,7 +42,7 @@ self.addEventListener('install', (event) => {
     self.skipWaiting();
 });
 
-// 2. مرحلة التفعيل (Activate): تنظيف الملفات والكاش القديم إن وجد
+// 2. مرحلة التفعيل (Activate): تنظيف الكاش القديم إن وجد
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((keys) => {
@@ -59,25 +59,32 @@ self.addEventListener('activate', (event) => {
     self.clients.claim();
 });
 
-// 3. مرحلة جلب الطلبات (Fetch): استراتيجية (Cache First, fallback to Network)
+// 3. مرحلة جلب الطلبات (Fetch): التخزين الديناميكي والتعامل مع الانتقال أوفلاين
 self.addEventListener('fetch', (event) => {
     event.respondWith(
         caches.match(event.request).then((cachedResponse) => {
-            // إذا كان الملف موجوداً في الكاش المحلي، نعيده فوراً (يعمل أوفلاين بسرعة فائقة)
+            // إذا وجد الملف أو الصفحة في الكاش، قم بإرجاعه فوراً
             if (cachedResponse) {
                 return cachedResponse;
             }
 
-            // إذا لم يكن موجوداً، نحاول جلبه من الشبكة العادية
+            // إذا لم يكن موجوداً، قم بطلبه من الشبكة وحفظه تلقائياً في الكاش للاستخدام اللاحق
             return fetch(event.request).then((networkResponse) => {
-                // تخزين الطلب الجديد في الكاش للمرات القادمة
-                return caches.open(CACHE_NAME).then((cache) => {
-                    cache.put(event.request, networkResponse.clone());
+                if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic' && !event.request.url.startsWith('http')) {
                     return networkResponse;
+                }
+
+                const responseToCache = networkResponse.clone();
+                caches.open(CACHE_NAME).then((cache) => {
+                    cache.put(event.request, responseToCache);
                 });
+
+                return networkResponse;
             }).catch(() => {
-                // في حال انقطاع الإنترنت ولم يتم العثور على الملف، يمكن عرض صفحة بديلة أو تسجيل تنبيه
-                console.log('⚠️ لا يوجد إنترنت، ولم يتم العثور على الملف:', event.request.url);
+                // في حال انقطاع الإنترنت ولم يتم العثور على الصفحة، يتم توجيه التصفح بسلاسة لصفحة home.html
+                if (event.request.mode === 'navigate') {
+                    return caches.match('./home.html');
+                }
             });
         })
     );
