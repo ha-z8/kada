@@ -20,6 +20,19 @@
             window.location.replace('index.html');
         }
     </script>
+    <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then((reg) => {
+          console.log('Service Worker registered successfully!', reg.scope);
+        })
+        .catch((err) => {
+          console.log('Service Worker registration failed:', err);
+        });
+    });
+  }
+</script>
 </head>
 <body class="bg-[#0c1410] text-slate-100 min-h-screen flex flex-col justify-between selection:bg-emerald-600 selection:text-white relative overflow-x-hidden font-['Cairo',sans-serif]"
       :class="zenMode ? 'bg-black text-slate-200' : ''"
@@ -722,14 +735,5 @@
     <script src="./features.js?v=2026.10.9"></script>
     <script src="./script.js?v=2026.10.9"></script>
     <script src="./layout.js?v=2026.10.9"></script>
-    <script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js')
-                .then(() => console.log('Service Worker Registered!'))
-                .catch((err) => console.log('SW Registration Failed:', err));
-        });
-    }
-    </script>
 </body>
 </html>
