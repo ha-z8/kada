@@ -2,21 +2,22 @@
 function studyGuideApp() {
     return {
         ...createNotifier(),
-        lang: 'ar',
+        guideLang: 'ar', // متغير مستقل خاص بلغة دليل الشرح فقط
         studyGuideSubject: 'chem',
         searchQuery: '',
         
-        toggleLang() {
-            this.lang = this.lang === 'ar' ? 'en' : 'ar';
-            document.documentElement.setAttribute('dir', this.lang === 'ar' ? 'rtl' : 'ltr');
-            document.documentElement.setAttribute('lang', this.lang);
+        // دالة تبديل اللغة الخاصة بدليل الشرح للمواد الداعمة
+        toggleStudyLang() {
+            this.guideLang = this.guideLang === 'ar' ? 'en' : 'ar';
+            this.showNotify(this.guideLang === 'ar' ? '🌐 تم تحويل الشرح إلى اللغة العربية' : '🌐 Study guide switched to English');
         },
 
         get filteredStudyQuestions() {
             const subjectObj = quizzesData[this.studyGuideSubject];
             if (!subjectObj) return [];
             
-            let quiz = (subjectObj.arabicOnly || !subjectObj[this.lang]) ? (subjectObj.ar || subjectObj) : subjectObj[this.lang];
+            // جلب محتوى المادة بناءً على لغة الدليل الحالية للمواد الداعمة
+            let quiz = (subjectObj.arabicOnly || !subjectObj[this.guideLang]) ? (subjectObj.ar || subjectObj) : subjectObj[this.guideLang];
             const list = quiz && quiz.questions ? quiz.questions : (Array.isArray(quiz) ? quiz : []);
             
             if (!this.searchQuery.trim()) return list;

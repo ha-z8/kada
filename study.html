@@ -38,15 +38,26 @@
     <main class="max-w-4xl w-full mx-auto px-4 py-8 flex-grow space-y-6 z-10">
         <div class="glass-card p-6 md:p-8 rounded-3xl shadow-2xl space-y-6">
             
-            <!-- أزرار المواد وشريط البحث -->
+            <!-- أزرار المواد، زر اللغة (للمواد المحددة)، وشريط البحث -->
             <div class="flex flex-col md:flex-row gap-4 justify-between items-center border-b border-emerald-900/40 pb-4">
-                <div class="flex gap-2 flex-wrap">
-                    <button @click="studyGuideSubject = 'aqeedah'; searchQuery = ''" :class="studyGuideSubject === 'aqeedah' ? 'bg-emerald-700 border-emerald-500 text-white' : 'bg-slate-900 border-emerald-900/60 text-slate-300'" class="px-3.5 py-2 rounded-xl text-xs font-bold border transition-all">العقيدة</button>
-                    <button @click="studyGuideSubject = 'chem'; searchQuery = ''" :class="studyGuideSubject === 'chem' ? 'bg-emerald-700 border-emerald-500 text-white' : 'bg-slate-900 border-emerald-900/60 text-slate-300'" class="px-3.5 py-2 rounded-xl text-xs font-bold border transition-all">Chemistry</button>
-                    <button @click="studyGuideSubject = 'math'; searchQuery = ''" :class="studyGuideSubject === 'math' ? 'bg-emerald-700 border-emerald-500 text-white' : 'bg-slate-900 border-emerald-900/60 text-slate-300'" class="px-3.5 py-2 rounded-xl text-xs font-bold border transition-all">Math</button>
-                    <button @click="studyGuideSubject = 'comp'; searchQuery = ''" :class="studyGuideSubject === 'comp' ? 'bg-emerald-700 border-emerald-500 text-white' : 'bg-slate-900 border-emerald-900/60 text-slate-300'" class="px-3.5 py-2 rounded-xl text-xs font-bold border transition-all">Computer</button>
+                <div class="flex gap-2 flex-wrap items-center">
+                    <!-- أزرار المواد الخمسة -->
+                    <button @click="studyGuideSubject = 'aqeedah'; searchQuery = ''" :class="studyGuideSubject === 'aqeedah' ? 'bg-emerald-700 border-emerald-500 text-white shadow' : 'bg-slate-900 border-emerald-900/60 text-slate-300'" class="px-3.5 py-2 rounded-xl text-xs font-bold border transition-all">العقيدة</button>
+                    <button @click="studyGuideSubject = 'fiqh'; searchQuery = ''" :class="studyGuideSubject === 'fiqh' ? 'bg-emerald-700 border-emerald-500 text-white shadow' : 'bg-slate-900 border-emerald-900/60 text-slate-300'" class="px-3.5 py-2 rounded-xl text-xs font-bold border transition-all">الفقه والسلوك</button>
+                    <button @click="studyGuideSubject = 'chem'; searchQuery = ''" :class="studyGuideSubject === 'chem' ? 'bg-emerald-700 border-emerald-500 text-white shadow' : 'bg-slate-900 border-emerald-900/60 text-slate-300'" class="px-3.5 py-2 rounded-xl text-xs font-bold border transition-all">Chemistry</button>
+                    <button @click="studyGuideSubject = 'math'; searchQuery = ''" :class="studyGuideSubject === 'math' ? 'bg-emerald-700 border-emerald-500 text-white shadow' : 'bg-slate-900 border-emerald-900/60 text-slate-300'" class="px-3.5 py-2 rounded-xl text-xs font-bold border transition-all">Math</button>
+                    <button @click="studyGuideSubject = 'comp'; searchQuery = ''" :class="studyGuideSubject === 'comp' ? 'bg-emerald-700 border-emerald-500 text-white shadow' : 'bg-slate-900 border-emerald-900/60 text-slate-300'" class="px-3.5 py-2 rounded-xl text-xs font-bold border transition-all">Computer</button>
+
+                    <!-- 🌐 زر تبديل اللغة يظهر فقط للرياضيات، الكيمياء، والحاسب -->
+                    <button x-show="studyGuideSubject === 'chem' || studyGuideSubject === 'math' || studyGuideSubject === 'comp'" 
+                            @click="toggleStudyLang()" 
+                            class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-emerald-900/60 text-xs font-bold text-emerald-300 transition-all shadow flex items-center gap-1">
+                        <span>🌐</span>
+                        <span x-text="guideLang === 'ar' ? 'English' : 'العربية'"></span>
+                    </button>
                 </div>
-                <div class="w-full md:w-72">
+
+                <div class="w-full md:w-64">
                     <input type="text" x-model="searchQuery" placeholder="بحث في المفاهيم والشروحات..." class="w-full bg-slate-900 border border-emerald-900/60 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500 shadow-inner">
                 </div>
             </div>
@@ -68,7 +79,7 @@
                         <div class="grid sm:grid-cols-2 gap-2 pt-1">
                             <template x-for="(optText, optIdx) in qItem.options" :key="optIdx">
                                 <div class="p-2.5 rounded-xl border text-xs flex items-center justify-between"
-                                       :class="optIdx === qItem.correct ? 'bg-emerald-950/50 border-emerald-500/60 text-emerald-200 font-bold' : 'bg-slate-950/40 border-slate-800 text-slate-400'">
+                                     :class="optIdx === qItem.correct ? 'bg-emerald-950/50 border-emerald-500/60 text-emerald-200 font-bold' : 'bg-slate-950/40 border-slate-800 text-slate-400'">
                                     <span x-text="optText"></span>
                                     <span class="font-mono opacity-70" x-text="String.fromCharCode(65 + optIdx)"></span>
                                 </div>
@@ -104,6 +115,12 @@
                 category: "العقيدة الإسلامية",
                 title: "منهج العقيدة للكليات العسكرية"
             },
+            fiqh: {
+                ...fiqhData,
+                arabicOnly: true,
+                category: "الفقه والسلوك",
+                title: "مقرر الفقه والسلوك للكليات العسكرية"
+            },
             chem: chemistryData,
             math: mathData,
             comp: computerData
@@ -119,6 +136,6 @@
                 .catch((err) => console.log('SW Registration Failed:', err));
         });
     }
-</script>
+    </script>
 </body>
 </html>

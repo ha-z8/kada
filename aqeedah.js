@@ -1,6 +1,6 @@
 const aqeedahData = {
-    title: "مقرر العقيدة للكليات العسكرية: التوثيق الشامل والمفصل لكافة المعلومات والنقاط والفوائد في المقرر (عربي فقط)",
-    category: "Complete Exhaustive Aqeedah Course Data (Arabic Only)",
+    title: "مقرر العقيدة للكليات العسكرية",
+    category: "العقيدة",
     ar: {
         questions: [
             {

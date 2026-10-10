@@ -1,6 +1,6 @@
 const computerData = {
-    title: "المراجعة الشاملة التفصيلية: البرامج المكتبية، الشبكات، الإنترنت، وأمن المعلومات (شامل لجميع السطور)",
-    category: "Complete Exhaustive Review: Spreadsheet, Presentation, Networks, Internet & Cyber Security",
+    title: "المراجعة الشاملة التفصيلية",
+    category: "Complete Exhaustive Review",
     ar: {
         questions: [
             // --- 1. Spreadsheet Program - Microsoft Excel ---

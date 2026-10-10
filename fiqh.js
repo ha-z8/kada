@@ -1,6 +1,6 @@
 const fiqhData = {
-    title: "مقرر الفقه والسلوك للكليات العسكرية: التوثيق الشامل لجميع المعلومات المحددة باللون الأصفر في الملف الثاني بالكامل (عربي فقط)",
-    category: "Complete Exhaustive Yellow Highlighted Data from Second PDF (Arabic Only)",
+    title: "مقرر الفقه والسلوك للكليات العسكرية",
+    category: "فقة",
     ar: {
         questions: [
             // --- من توجيهات فقهية عسكرية (الأكسجين ودوار البحر) ---

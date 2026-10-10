@@ -1,6 +1,6 @@
 const chemistryData = {
-    title: "الكيمياء العامة التطبيقية والنظرية: التوثيق الشامل لجميع المفاهيم، القوانين، والمسائل الحسابية",
-    category: "Master Exhaustive General Chemistry: Complete Concepts, Laws, Applied Problems & Calculations",
+    title: "الكيمياء",
+    category: "Chemistry",
     ar: {
         questions: [
             // --- الأسئلة والمفاهيم النظرية والقوانين من الملف الأول ---

@@ -1,6 +1,6 @@
 const mathData = {
-    title: "الاختبار النهائي الشامل: كافة قوانين الجبر، الهندسة، التفاضل، التكامل، والدوال المثلثية بالتفصيل الدقيق",
-    category: "Complete Exhaustive Final Exam: All Algebra, Geometry, Calculus & Trigonometry Laws",
+    title: "الرياضيات",
+    category: "Mathematics",
     ar: {
         questions: [
             // S.1

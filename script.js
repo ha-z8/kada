@@ -6,6 +6,12 @@ const quizzesData = {
         category: "العقيدة الإسلامية",
         title: "منهج العقيدة للكليات العسكرية"
     },
+    fiqh: {
+        ...fiqhData,
+        arabicOnly: true,
+        category: "الفقه والسلوك",
+        title: "مقرر الفقه والسلوك للكليات العسكرية"
+    },
     chem: chemistryData,
     math: mathData,
     comp: computerData
@@ -17,6 +23,7 @@ function quizApp() {
 
         currentView: 'home',
         activeKey: 'aqeedah',
+        quizLang: 'ar',
         timerSeconds: 30,
         currentTitle: '',
         currentCategory: '',
@@ -50,6 +57,13 @@ function quizApp() {
         openCustomQuizBuilder() {
             clearInterval(this.timerInterval);
             this.currentView = 'custom_quiz';
+        },
+
+        // 🌐 دالة لتبديل لغة الاختبار فقط للمواد التي تدعم الإنجليزية
+        toggleQuizLang() {
+            this.quizLang = this.quizLang === 'ar' ? 'en' : 'ar';
+            this.startQuiz(this.activeKey);
+            this.showNotify(this.quizLang === 'ar' ? '🌐 تم تحويل لغة الأسئلة إلى العربية' : '🌐 Quiz language switched to English');
         },
 
         startCustomQuiz() {
@@ -236,9 +250,9 @@ startSmartWeaknessQuiz() {
             const quizGroup = quizzesData[key];
             if (!quizGroup) return;
             
-            if (quizGroup.arabicOnly && this.lang !== 'ar') return;
+            if (quizGroup.arabicOnly && this.quizLang !== 'ar') return;
 
-            let targetQuiz = (quizGroup.arabicOnly || !quizGroup[this.lang]) ? (quizGroup.ar || quizGroup) : quizGroup[this.lang];
+            let targetQuiz = (quizGroup.arabicOnly || !quizGroup[this.quizLang]) ? (quizGroup.ar || quizGroup) : quizGroup[this.quizLang];
             const rawQuestions = targetQuiz.questions || targetQuiz;
             if (!rawQuestions || rawQuestions.length === 0) return;
 
@@ -286,6 +300,7 @@ startSmartWeaknessQuiz() {
         },
 
         selectOption(optionIdx) {
+            // تحديث الإجابة للسؤال الحالي
             this.userAnswers[this.currentIndex] = optionIdx;
         },
 
